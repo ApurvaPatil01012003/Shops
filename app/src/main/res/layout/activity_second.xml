@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5"
+    android:gravity="center"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/ShopName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#151516"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:background="@drawable/bg_card"
+            android:elevation="4dp">
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
+    <LinearLayout
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+            <TextView
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:text="2023-2024 turnOver"
+                android:textSize="16sp"
+                android:textColor="#555"
+                android:layout_marginTop="16dp" />
+
+            <EditText
+                android:id="@+id/FirstTurnOver"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:hint="Enter Turnover"
+                android:background="@drawable/edittext_background"
+                android:padding="12dp"
+                android:textSize="16sp"
+                android:layout_marginTop="4dp"
+                android:inputType="numberDecimal" />
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="180dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+    <TextView
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:text="2024-2025 turnOver"
+        android:textSize="16sp"
+        android:textColor="#555"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/SecondTurnOver"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:hint="Enter Turnover"
+        android:background="@drawable/edittext_background"
+        android:padding="12dp"
+        android:textSize="16sp"
+        android:layout_marginTop="4dp"
+        android:inputType="numberDecimal" />
+    </LinearLayout>
+
+</LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/txtGrowth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="150dp"
+                    android:text="Growth ="
+                    android:textSize="16sp"
+                    android:textColor="#000000" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Growth Percentage"
+                android:textSize="16sp"
+                android:textColor="#555"
+                android:layout_marginTop="16dp" />
+            <EditText
+                android:id="@+id/edtGrowth"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edittext_background"
+                android:padding="12dp"
+                android:layout_marginTop="4dp"
+                android:inputType="numberDecimal"/>
+
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Shop Holiday"
+                android:textSize="16sp"
+                android:textColor="#555"
+                android:layout_marginTop="16dp" />
+
+            <Spinner
+                android:id="@+id/spinnerShopHoli"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edittext_background"
+                android:padding="12dp"
+                android:layout_marginTop="4dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="High Performance Days"
+                android:textSize="16sp"
+                android:textColor="#555"
+                android:layout_marginTop="16dp" />
+
+            <EditText
+                android:id="@+id/edtHighPerDays"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Select Days"
+                android:textSize="16sp"
+                android:focusable="false"
+                android:padding="12dp"
+                android:clickable="true"
+                android:background="@drawable/edittext_background"
+                android:drawableEnd="@drawable/baseline_arrow_drop_down_24" />
+
+        </LinearLayout>
+
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save And Next"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="32dp"
+            android:backgroundTint="#6200EE"
+            android:textColor="#fff"
+            android:textAllCaps="false"
+            android:padding="14dp"
+            android:textSize="16sp" />
+
+
+
+    </LinearLayout>
+</LinearLayout>

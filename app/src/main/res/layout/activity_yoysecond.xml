@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F5F5F5"
+    android:gravity="center"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+        <Button
+            android:id="@+id/btnDailyTable"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Daily YOY Table"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="#6200EE"
+            android:textColor="#fff"
+            android:textAllCaps="false"
+            android:padding="12dp"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Daily YOY"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="#121112"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp"
+            android:background="@drawable/bg_card"
+            android:elevation="4dp">
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Date"
+                android:textSize="16sp"
+                android:textColor="#555"
+                android:layout_marginTop="4dp" />
+
+            <EditText
+                android:id="@+id/et_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Select Date"
+                android:focusable="false"
+                android:clickable="true"
+                android:inputType="none"
+                android:background="@drawable/edittext_background"
+                android:padding="12dp"/>
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Achieved"
+                android:textSize="16sp"
+                android:textColor="#555"
+                android:layout_marginTop="16dp" />
+
+            <EditText
+                android:id="@+id/edtAchieved"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter Achieved"
+                android:background="@drawable/edittext_background"
+                android:padding="12dp"
+                android:textSize="16sp"
+                android:layout_marginTop="4dp"
+                android:inputType="numberDecimal"/>
+
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Quantity"
+                android:textSize="16sp"
+                android:textColor="#555"
+                android:layout_marginTop="16dp" />
+            <EditText
+                android:id="@+id/edtQty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter Quantity"
+                android:background="@drawable/edittext_background"
+                android:padding="12dp"
+                android:textSize="16sp"
+                android:layout_marginTop="4dp"
+                android:inputType="numberDecimal" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="NOB"
+                android:textSize="16sp"
+                android:textColor="#555"
+                android:layout_marginTop="16dp" />
+            <EditText
+                android:id="@+id/edtNob"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter No Of Bills"
+                android:background="@drawable/edittext_background"
+                android:padding="12dp"
+                android:textSize="16sp"
+                android:layout_marginTop="4dp"
+                android:inputType="numberDecimal"/>
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btnSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Save And Next"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="32dp"
+            android:backgroundTint="#6200EE"
+            android:textColor="#fff"
+            android:textAllCaps="false"
+            android:padding="14dp"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+
+</LinearLayout>

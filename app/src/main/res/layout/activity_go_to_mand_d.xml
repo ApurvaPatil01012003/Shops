@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    tools:context=".GoToMAndD">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/edittext_background"
+        >
+  <TextView
+      android:id="@+id/txtTitle"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:textSize="22sp"
+      android:text="Do You Want To View Monthly YOY :"
+     />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/btnyes"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="YES"
+            android:textColor="@color/black"
+            android:padding="16dp"
+            android:backgroundTint="#59AAE7"
+            />
+        <Button
+            android:id="@+id/btnNo"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="20dp"
+            android:text="NO"
+            android:textColor="@color/black"
+            android:padding="16dp"
+            android:backgroundTint="#59AAE7"
+            />
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@drawable/edittext_background"
+        >
+        <TextView
+            android:id="@+id/txtDailyTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="22sp"
+            android:text="Do You Want To View Daily YOY :"
+            />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/btnDyes"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:text="YES"
+                android:textColor="@color/black"
+                android:padding="16dp"
+                android:backgroundTint="#59AAE7"
+                />
+            <Button
+                android:id="@+id/btnDNo"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:text="NO"
+                android:textColor="@color/black"
+                android:padding="16dp"
+                android:backgroundTint="#59AAE7"
+                />
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>
