@@ -39,9 +39,10 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
             <TextView
+                android:id="@+id/txtFirstTurnOver"
                 android:layout_width="150dp"
                 android:layout_height="wrap_content"
-                android:text="2023-2024 turnOver"
+
                 android:textSize="16sp"
                 android:textColor="#555"
                 android:layout_marginTop="16dp" />
@@ -63,9 +64,10 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
     <TextView
+        android:id="@+id/txtSecondTurnOver"
         android:layout_width="150dp"
         android:layout_height="wrap_content"
-        android:text="2024-2025 turnOver"
+
         android:textSize="16sp"
         android:textColor="#555"
         android:layout_marginTop="16dp" />
@@ -152,21 +154,22 @@
                 android:background="@drawable/edittext_background"
                 android:drawableEnd="@drawable/baseline_arrow_drop_down_24" />
 
+
+
+            <Button
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save And Next"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="32dp"
+                android:backgroundTint="#196C92"
+                android:textColor="#fff"
+                android:textAllCaps="false"
+                android:padding="14dp"
+                android:textSize="16sp" />
+
         </LinearLayout>
-
-
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Save And Next"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="32dp"
-            android:backgroundTint="#6200EE"
-            android:textColor="#fff"
-            android:textAllCaps="false"
-            android:padding="14dp"
-            android:textSize="16sp" />
 
 
 

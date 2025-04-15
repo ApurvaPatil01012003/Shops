@@ -36,10 +36,11 @@ import java.util.ArrayList;
 
 
 public class ChartActivity extends AppCompatActivity {
-BarChart barChart;
-PieChart pieChart;
-    Button btnMonthlyYOY, btnDailyYOY ,btnlogout;
+    BarChart barChart;
+    PieChart pieChart;
+    Button btnMonthlyYOY, btnDailyYOY, btnlogout;
     String TURNOVER;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -51,16 +52,15 @@ PieChart pieChart;
             return insets;
         });
 
-        barChart=findViewById(R.id.barChart);
-        pieChart=findViewById(R.id.pieChart);
-        btnMonthlyYOY=findViewById(R.id.btnMonthlyYOY);
-        btnDailyYOY=findViewById(R.id.btnDailyYOY);
+        barChart = findViewById(R.id.barChart);
+        pieChart = findViewById(R.id.pieChart);
+        btnMonthlyYOY = findViewById(R.id.btnMonthlyYOY);
+        btnDailyYOY = findViewById(R.id.btnDailyYOY);
         setUpBarchart();
         setupPieChart();
 
 
-
-    SharedPreferences sharedPref = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        SharedPreferences sharedPref = getSharedPreferences("MyPrefs", MODE_PRIVATE);
 
 
         String turnoverFromIntent = getIntent().getStringExtra("TurnOver");
@@ -74,19 +74,16 @@ PieChart pieChart;
         Log.d("TURNOVER", "Turnover used (hiddenly): " + TURNOVER);
 
 
-
-
-
-        btnlogout=findViewById(R.id.btnlogout);
+        btnlogout = findViewById(R.id.btnlogout);
         btnlogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                SharedPreferences sharedPref = getSharedPreferences("ShopData",MODE_PRIVATE);
+                SharedPreferences sharedPref = getSharedPreferences("ShopData", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPref.edit();
                 editor.clear();
                 editor.apply();
 
-                Intent intent = new Intent(ChartActivity.this,MainActivity.class);
+                Intent intent = new Intent(ChartActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
             }
@@ -161,15 +158,14 @@ PieChart pieChart;
         barChart.getAxisRight().setEnabled(false); // Disable right Y-axis
 
         // Customize Legend
-          Legend legend = barChart.getLegend();
+        Legend legend = barChart.getLegend();
         legend.setVerticalAlignment(Legend.LegendVerticalAlignment.TOP);
-       legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
-       legend.setOrientation(Legend.LegendOrientation.VERTICAL);
+        legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.RIGHT);
+        legend.setOrientation(Legend.LegendOrientation.VERTICAL);
         legend.setDrawInside(true);
 
         barChart.invalidate();
     }
-
 
 
     private void setupPieChart() {
@@ -233,8 +229,7 @@ PieChart pieChart;
         pieChart.invalidate();
     }
 
-  public void openYOYActivity()
-    {
+    public void openYOYActivity() {
 //        Intent intent = new Intent(ChartActivity.this,YOYActivity.class);
 //        intent.putExtra("TurnOver",TURNOVER);
 //        startActivity(intent);
@@ -243,8 +238,7 @@ PieChart pieChart;
 
     }
 
-    public void openYOYSECONDActivity()
-    {
+    public void openYOYSECONDActivity() {
 //        Intent intent = new Intent(ChartActivity.this, YOYSecondActivity.class);
 //        startActivity(intent);
     }

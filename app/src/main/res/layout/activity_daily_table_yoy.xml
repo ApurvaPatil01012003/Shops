@@ -1,38 +1,26 @@
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main"
-    android:background="#F5F5F5"
-    android:padding="16dp">
-    <HorizontalScrollView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
 
         <Spinner
             android:id="@+id/spinnerMonth"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="8dp"/>
 
-     <TextView
-         android:id="@+id/txtTurnOver"
-         android:layout_width="match_parent"
-         android:layout_height="wrap_content"
-         android:layout_marginStart="250dp"
-         />
+        <!-- This will hold individual card views dynamically -->
         <LinearLayout
             android:id="@+id/tableContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"/>
-
     </LinearLayout>
-    </HorizontalScrollView>
 </ScrollView>

@@ -16,72 +16,78 @@ import androidx.core.view.WindowInsetsCompat;
 import java.time.LocalDate;
 
 public class GoToMAndD extends AppCompatActivity {
-Button btnyes,btnNo,btnDyes;
+    Button btnyes, btnDyes;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_go_to_mand_d);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        btnyes=findViewById(R.id.btnyes);
-        btnDyes=findViewById(R.id.btnDyes);
 
-        int SecondTurnOverValue = getIntent().getIntExtra("TurnOver", 0);
-
-        if (SecondTurnOverValue != 0) {
-            Log.d("ReceivedGrowth", "Hidden growth value: " + SecondTurnOverValue);
-        };
+        btnyes = findViewById(R.id.btnyes);
+        btnDyes = findViewById(R.id.btnDyes);
 
 
-        String Holiday = getIntent().getStringExtra("shopsHoliday");
-        Log.d("Holiday", "Holiday is : " + Holiday);
+        Intent intent = getIntent();
+        int SecondTurnOverValue = intent.getIntExtra("TurnOver", -1);
+        String Holiday = intent.getStringExtra("shopsHoliday");
+        String HighPerDay = intent.getStringExtra("HighPerformace");
+        int growth = intent.getIntExtra("EdtGrowth", -1);
 
 
+        SharedPreferences prefs = getSharedPreferences("ShopData", MODE_PRIVATE);
+        if (SecondTurnOverValue == -1) {
+            SecondTurnOverValue = prefs.getInt("Sturnover", 0);
+        }
+        if (Holiday == null) {
+            Holiday = prefs.getString("Shop_Holiday", "");
+        }
+        if (HighPerDay == null) {
+            HighPerDay = prefs.getString("selected_days", "");
+        }
+        if (growth == -1) {
+            growth = prefs.getInt("editGrowth", 0);
+        }
 
-        btnyes.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
+        Log.d("GoToMAndD", "From SharedPref or Intent:");
+        Log.d("GoToMAndD", "TurnOver: " + SecondTurnOverValue);
+        Log.d("GoToMAndD", "Holiday: " + Holiday);
+        Log.d("GoToMAndD", "HighPerDay: " + HighPerDay);
+        Log.d("GoToMAndD", "Growth: " + growth);
 
 
-                Intent intent = new Intent(GoToMAndD.this,YOYActivity.class);
-              intent.putExtra("TurnYear", SecondTurnOverValue);
-
-
-              Log.d("Give_next","Data :"+SecondTurnOverValue);
-                startActivity(intent);
-            }
-        });
-        SharedPreferences sharedPrefs = getSharedPreferences("Shop_data",MODE_PRIVATE);
-        SharedPreferences.Editor editor =  sharedPrefs.edit();
-        editor.putInt("Growth_Year",SecondTurnOverValue);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("TURNOVER", SecondTurnOverValue);
+        editor.putString("SHOP_HOLIDAY", Holiday);
+        editor.putString("High_per_day", HighPerDay);
+        editor.putInt("Growth", growth);
         editor.apply();
 
-
-
-
-        btnDyes.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(GoToMAndD.this, YOYSecondActivity.class);
-                intent.putExtra("ShopHoliday",Holiday);
-                intent.putExtra("TurnYear", SecondTurnOverValue);
-                startActivity(intent);
-                Log.d("DailyTurnOver","Daily turn Over is : "+SecondTurnOverValue);
-               Log.d("ShopHoliday","Holiday is : "+Holiday);
-            }
+        int finalSecondTurnOverValue = SecondTurnOverValue;
+        btnyes.setOnClickListener(v -> {
+            Intent i = new Intent(GoToMAndD.this, YOYActivity.class);
+            i.putExtra("TurnYear", finalSecondTurnOverValue);
+            startActivity(i);
         });
-        SharedPreferences sharedPreferences=getSharedPreferences("HolidaysPrefs",MODE_PRIVATE);
-        SharedPreferences.Editor editor1 =sharedPreferences.edit();
-        editor1.putString("SHOP_HOLIDAY",Holiday);
-        editor1.putInt("TURNOVER",SecondTurnOverValue);
-        editor1.apply();
 
-
-
+        String finalHoliday = Holiday;
+        int finalSecondTurnOverValue1 = SecondTurnOverValue;
+        String finalHighPerDay = HighPerDay;
+        int finalGrowth = growth;
+        btnDyes.setOnClickListener(v -> {
+            Intent i = new Intent(GoToMAndD.this, YOYSecondActivity.class);
+            i.putExtra("ShopHoliday", finalHoliday);
+            i.putExtra("TurnYear", finalSecondTurnOverValue1);
+            i.putExtra("HighPerformance", finalHighPerDay);
+            i.putExtra("Growth", finalGrowth);
+            startActivity(i);
+        });
     }
+
 }

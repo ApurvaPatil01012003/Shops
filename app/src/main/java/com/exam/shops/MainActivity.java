@@ -14,8 +14,9 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends AppCompatActivity {
-    EditText edtName,edtMobile,edtActcode;
+    EditText edtName, edtMobile, edtActcode;
     Button btnActive;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,17 +33,17 @@ public class MainActivity extends AppCompatActivity {
         boolean isFirstTime = sharedPref.getBoolean("isFirstTime", true);
 
         if (!isFirstTime) {
-            Intent intent = new Intent(MainActivity.this, ChartActivity.class);
+            Intent intent = new Intent(MainActivity.this, GoToMAndD.class);
             startActivity(intent);
             finish();
             return;
         }
 
 
-        edtName=findViewById(R.id.edtName);
-        edtMobile=findViewById(R.id.edtMobile);
-        edtActcode=findViewById(R.id.edtActcode);
-        btnActive=findViewById(R.id.btnActive);
+        edtName = findViewById(R.id.edtName);
+        edtMobile = findViewById(R.id.edtMobile);
+        edtActcode = findViewById(R.id.edtActcode);
+        btnActive = findViewById(R.id.btnActive);
 
         btnActive.setOnClickListener(v -> {
             String name = edtName.getText().toString().trim();
@@ -51,14 +52,14 @@ public class MainActivity extends AppCompatActivity {
 
 
             if (!name.isEmpty() && !mobile.isEmpty() && !actCode.isEmpty()) {
-                if(mobile.length()==10 && mobile.matches("\\d{10}")) {
+                if (mobile.length() == 10 && mobile.matches("\\d{10}")) {
                     saveDataToSharedPref(name, mobile, actCode);
                     Toast.makeText(this, "Data Saved!", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(MainActivity.this, SecondActivity.class);
                     intent.putExtra("shop_name", name);
                     startActivity(intent);
                     finish();
-                }else {
+                } else {
                     Toast.makeText(this, "Please Enter 10 Digit Valid Mobile Number", Toast.LENGTH_SHORT).show();
                 }
             } else {
@@ -76,10 +77,6 @@ public class MainActivity extends AppCompatActivity {
         editor.putString("activation_code", actCode);
         editor.putBoolean("isFirstTime", false);
         editor.apply();
-
-
-
-
 
 
     }

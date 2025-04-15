@@ -1,11 +1,13 @@
 package com.exam.shops;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
@@ -20,6 +22,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
@@ -31,225 +34,346 @@ public class DailyTableYOY extends AppCompatActivity {
     TextView txtTurnOver;
     int SecondTurnOverValue;
 
+    int achievedValue;
+    int quantities;
+    int nobValue;
+    String highPerDay;
+    int growthPer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_daily_table_yoy);
+
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
-        Holiday = getIntent().getStringExtra("ShopHoliday");
-        Log.d("ShopHoliday","Shop holiday is : "+Holiday);
-
-        SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
-
-        SharedPreferences sharedPrefs=getSharedPreferences("Shop Data",MODE_PRIVATE);
-        SharedPreferences.Editor editor=sharedPrefs.edit();
-        editor.putString("Shop_Holiday",Holiday);
-        editor.putFloat("TURNOVER",SecondTurnOverValue);
-
-
-
 
         spinnerMonth = findViewById(R.id.spinnerMonth);
         tableContainer = findViewById(R.id.tableContainer);
-        txtTurnOver=findViewById(R.id.txtTurnOver);
-        txtTurnOver.setText("Target = "+SecondTurnOverValue);
 
-        List<String> monthsList = new ArrayList<>();
-        SimpleDateFormat displayFormat = new SimpleDateFormat("MMMM yyyy", Locale.getDefault());
+        Holiday = getIntent().getStringExtra("ShopHoliday");
+        SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
+        achievedValue = getIntent().getIntExtra("Achived_Value", 0);
+        quantities = getIntent().getIntExtra("Quantity", 0);
+        nobValue = getIntent().getIntExtra("NOB", 0);
+        highPerDay = getIntent().getStringExtra("HighPerDay");
+        growthPer = getIntent().getIntExtra("Growth", 0);
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(2025, Calendar.APRIL, 1); // Start from April 2025
 
-        for (int i = 0; i < 12; i++) {
-            monthsList.add(displayFormat.format(calendar.getTime()));
-            calendar.add(Calendar.MONTH, 1); // Move to next month
-        }
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, monthsList);
+        Log.d("High", "High Performance Day : " + highPerDay);
+        Log.d("High", "High Performance Day : " + growthPer);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getFincialYearMonths());
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerMonth.setAdapter(adapter);
+
+        String currentMonthLabel = getCurrentMonthLabel();
+        int defaultPosition = adapter.getPosition(currentMonthLabel);
+        spinnerMonth.setSelection(defaultPosition);
 
         spinnerMonth.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Calendar selectedCal = Calendar.getInstance();
-                selectedCal.set(2025, Calendar.APRIL + position, 1); // Set to selected month
+                String selected = parent.getItemAtPosition(position).toString();
+                String[] parts = selected.split(" ");
+                if (parts.length == 2) {
+                    String monthStr = parts[0];
+                    int year = Integer.parseInt(parts[1]);
 
-                generateDateRows(selectedCal);
+                    int monthIndex = getMonthIndex(monthStr);
+                    Calendar selectedMonth = Calendar.getInstance();
+                    selectedMonth.set(Calendar.YEAR, year);
+                    selectedMonth.set(Calendar.MONTH, monthIndex);
+                    selectedMonth.set(Calendar.DAY_OF_MONTH, 1);
+                    generateDateRows(selectedMonth);
+                }
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
         });
     }
 
 
 
+    public List<String> getFincialYearMonths() {
+        List<String> monthList = new ArrayList<>();
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
 
+        int startYear;
+        if (month >= calendar.APRIL) {
+            startYear = year;
+        } else {
+            startYear = year - 1;
+        }
+
+        String MonthNames[] = {"April", "May", "June", "July", "August", "September", "October", "November", "December",
+                "January", "February", "March"};
+
+        for (int i = 0; i < MonthNames.length; i++) {
+            String label;
+            if (i < 9) {
+                label = MonthNames[i] + " " + startYear;
+            } else {
+                label = MonthNames[i] + " " + (startYear + 1);
+            }
+
+            monthList.add(label);
+        }
+        return monthList;
+
+    }
+
+    private int getMonthIndex(String monthName) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("MMMM", Locale.ENGLISH);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(sdf.parse(monthName));
+            return cal.get(Calendar.MONTH);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return 0;
+        }
+    }
+
+    private String getCurrentMonthLabel() {
+        Calendar calendar = Calendar.getInstance();
+        int month = calendar.get(Calendar.MONTH);
+        int year = calendar.get(Calendar.YEAR);
+
+        if (month < Calendar.APRIL) {
+            year = year - 1;
+        }
+
+        String[] MonthNames = {"April", "May", "June", "July", "August", "September", "October", "November", "December",
+                "January", "February", "March"};
+
+        String currentMonthName;
+        if (month >= Calendar.APRIL && month <= Calendar.DECEMBER) {
+            currentMonthName = MonthNames[month - Calendar.APRIL];
+            return currentMonthName + " " + year;
+        } else {
+            currentMonthName = MonthNames[month + 9];
+            return currentMonthName + " " + (year + 1);
+        }
+    }
+
+//    private void generateDateRows(Calendar startDate) {
+//        tableContainer.removeAllViews();
+//
+//        int year = startDate.get(Calendar.YEAR);
+//        int month = startDate.get(Calendar.MONTH);
+//        Calendar cal = Calendar.getInstance();
+//        cal.set(year, month, 1);
+//
+//        int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+//        SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE", Locale.getDefault());
+//
+//        int workingDays = 0;
+//        for (int i = 1; i <= daysInMonth; i++) {
+//            cal.set(Calendar.DAY_OF_MONTH, i);
+//            if (!Holiday.equals(dayFormat.format(cal.getTime()))) {
+//                workingDays++;
+//            }
+//        }
+//
+//
+//        for (int i = 1; i <= daysInMonth; i++) {
+//            cal.set(Calendar.DAY_OF_MONTH, i);
+//            String dateStr = dateFormat.format(cal.getTime());
+//            String dayStr = dayFormat.format(cal.getTime());
+//            String type;//= Holiday.equals(dayStr) ? "Holiday" : "Working day";
+//            if (Holiday.equals(dayStr)) {
+//                type = "Holiday";
+//            } else if (highPerDay != null && highPerDay.equals(dayStr)) {
+//                type = "High Performance Day";
+//
+//
+//
+//            } else {
+//                type = "Working Day";
+//
+//
+//            }
+//            int Growth = growthPer / 100;
+//
+//            float monthlyTarget = (float) SecondTurnOverValue / 12f;
+//            float dailyTarget = monthlyTarget / workingDays;
+//            String formattedDailyTarget = String.format("%.2f", dailyTarget);
+//
+//            //try for high performance but not done.
+//            if(highPerDay != null) {
+//                if (highPerDay.equals(dayStr)) {
+//                    dailyTarget = (monthlyTarget / workingDays) + Growth;
+//                    formattedDailyTarget = String.format("%.2f", dailyTarget);
+//                } else {
+//                    dailyTarget = (monthlyTarget / workingDays) - Growth;
+//                    formattedDailyTarget = String.format("%.2f", dailyTarget);
+//                }
+//            }else {
+//                monthlyTarget = (float) SecondTurnOverValue / 12f;
+//                dailyTarget = monthlyTarget / workingDays;
+//                formattedDailyTarget = String.format("%.2f", dailyTarget);
+//            }
+//
+//
+//
+//
+//            int achievedForDate = getSharedPreferences("Shop Data", MODE_PRIVATE).getInt("Achieved_" + dateStr, 0);
+//            int quantityForDate = getSharedPreferences("Shop Data", MODE_PRIVATE).getInt("Quantity_" + dateStr, 0);
+//            int NOBForDate = getSharedPreferences("Shop Data", MODE_PRIVATE).getInt("NOB_" + dateStr, 0);
+//            int ABS = (NOBForDate != 0) ? quantityForDate / NOBForDate : 0;
+//            float ATV = (NOBForDate != 0) ? (float) achievedForDate / NOBForDate : 0;
+//            float ASP = (quantityForDate != 0) ? (float) achievedForDate / quantityForDate : 0;
+//            float percentage = (type.equals("Working Day") && dailyTarget != 0) ? (achievedForDate / dailyTarget) * 100f : 0;
+//
+//            // Inflate card view
+//            View cardView = getLayoutInflater().inflate(R.layout.card_daily_info, null);
+//
+//            ((TextView) cardView.findViewById(R.id.txtDate)).setText("Date: " + dateStr);
+//            ((TextView) cardView.findViewById(R.id.txtDay)).setText("Day: " + dayStr);
+//            ((TextView) cardView.findViewById(R.id.txtAchieved)).setText("Achieved: " + achievedForDate);
+//            ((TextView) cardView.findViewById(R.id.txtType)).setText("Type: " + type);
+//            ((TextView) cardView.findViewById(R.id.txtExpect)).setText(
+//                    "Expected: " + ((type.equals("Working Day") || type.equals("High Performance Day")) ? formattedDailyTarget : "0"));
+//            ((TextView) cardView.findViewById(R.id.txtAchievedPer)).setText("Achieved %: " + String.format("%.2f%%", percentage));
+//            ((TextView) cardView.findViewById(R.id.txtQuantity)).setText("Quantity: " + quantityForDate);
+//            ((TextView) cardView.findViewById(R.id.txtNOB)).setText("NOB: " + NOBForDate);
+//            ((TextView) cardView.findViewById(R.id.txtABS)).setText("ABS: " + ABS);
+//            ((TextView) cardView.findViewById(R.id.txtATV)).setText("ATV: " + String.format(Locale.US, "%.2f", ATV));
+//            ((TextView) cardView.findViewById(R.id.txtASP)).setText("ASP: " + String.format(Locale.US, "%.2f", ASP));
+//
+//            LinearLayout detailsLayout = cardView.findViewById(R.id.detailsLayout);
+//            cardView.setOnClickListener(v -> {
+//                detailsLayout.setVisibility(detailsLayout.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+//            });
+//
+//            tableContainer.addView(cardView);
+//        }
+//    }
 
 
 
     private void generateDateRows(Calendar startDate) {
-
         tableContainer.removeAllViews();
-
-        // --- Header Row ---
-        LinearLayout headerRow = new LinearLayout(this);
-        headerRow.setOrientation(LinearLayout.HORIZONTAL);
-        headerRow.setPadding(8, 8, 8, 8);
-        headerRow.setBackgroundColor(Color.LTGRAY);
-
-        TextView headerDate = new TextView(this);
-        headerDate.setText("Date");
-        headerDate.setTextColor(Color.BLACK);
-        headerDate.setTextSize(16);
-        headerDate.setTypeface(null, android.graphics.Typeface.BOLD);
-        headerDate.setLayoutParams(new LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        TextView headerDay = new TextView(this);
-        headerDay.setText("Day");
-        headerDay.setTextColor(Color.BLACK);
-        headerDay.setTextSize(16);
-        headerDay.setTypeface(null, android.graphics.Typeface.BOLD);
-        headerDay.setLayoutParams(new LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        TextView headerType = new TextView(this);
-        headerType.setText("Type");
-        headerType.setTextColor(Color.BLACK);
-        headerType.setTextSize(16);
-        headerType.setTypeface(null, android.graphics.Typeface.BOLD);
-        headerType.setLayoutParams(new LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        TextView headerExpect = new TextView(this);
-        headerExpect.setText("Expect");
-        headerExpect.setTextColor(Color.BLACK);
-        headerExpect.setTextSize(16);
-        headerExpect.setTypeface(null, android.graphics.Typeface.BOLD);
-        headerExpect.setLayoutParams(new LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT));
-
-
-        TextView headerAchieved = new TextView(this);
-        headerAchieved.setText("Achieved");
-        headerAchieved.setTextColor(Color.BLACK);
-        headerAchieved.setTextSize(16);
-        headerAchieved.setTypeface(null, android.graphics.Typeface.BOLD);
-        headerAchieved.setLayoutParams(new LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT));
-
-        headerRow.addView(headerDate);
-        headerRow.addView(headerDay);
-        headerRow.addView(headerType);
-        headerRow.addView(headerExpect);
-        headerRow.addView(headerAchieved);
-
-        tableContainer.addView(headerRow);
-
-
-
-
 
         int year = startDate.get(Calendar.YEAR);
         int month = startDate.get(Calendar.MONTH);
-
         Calendar cal = Calendar.getInstance();
         cal.set(year, month, 1);
 
         int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
         SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
         SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE", Locale.getDefault());
-      int TotalDaysCount=0;
-        int cnt=0;
+
+
+        List<String> highPerfDaysList = new ArrayList<>();
+        if (highPerDay != null && !highPerDay.isEmpty()) {
+            for (String day : highPerDay.split(",")) {
+                highPerfDaysList.add(day.trim());
+            }
+        }
 
 
         int workingDays = 0;
+        int highPerfDays = 0;
+
         for (int i = 1; i <= daysInMonth; i++) {
             cal.set(Calendar.DAY_OF_MONTH, i);
             String dayStr = dayFormat.format(cal.getTime());
-
             if (!Holiday.equals(dayStr)) {
                 workingDays++;
             }
+            if (highPerfDaysList.contains(dayStr)) {
+                highPerfDays++;
+            }
         }
-        float monthlyTarget = (float) SecondTurnOverValue / 12f;
-        float dailyTarget = monthlyTarget / workingDays;
-        String formattedDailyTarget = String.format("%.2f", dailyTarget);
+        Log.d("DailyTableYOY","Working days : "+workingDays);
+        Log.d("DailyTableYOY","High per day : "+highPerfDays);
 
+        float monthlyTarget = (float) SecondTurnOverValue / 12f;
+        float baseTargetDays = workingDays;
+        float growthMultiplier = 1 + (growthPer / 100f);
+       float highPerfTarget = 0f;
+
+        if (highPerfDays > 0) {
+            float baseDailyTarget = monthlyTarget / (workingDays + highPerfDays * (growthMultiplier - 1));
+            highPerfTarget = baseDailyTarget * growthMultiplier;
+        }
+
+        float dailyTarget = 0f;
+        if (highPerfDays > 0) {
+            dailyTarget = monthlyTarget / (workingDays + highPerfDays * (growthMultiplier - 1));
+        } else {
+            dailyTarget = monthlyTarget / workingDays;
+        }
 
         for (int i = 1; i <= daysInMonth; i++) {
             cal.set(Calendar.DAY_OF_MONTH, i);
-
             String dateStr = dateFormat.format(cal.getTime());
             String dayStr = dayFormat.format(cal.getTime());
+
             String type;
+            float targetForDay;
 
-            TotalDaysCount++;
             if (Holiday.equals(dayStr)) {
-                type="Holiday";
-                cnt++;
-
-            }
-            else {
-                type="Working day";
-            }
-
-
-            // Create row
-            LinearLayout row = new LinearLayout(this);
-            row.setOrientation(LinearLayout.HORIZONTAL);
-            row.setPadding(8, 8, 8, 8);
-
-            TextView txtDate = new TextView(this);
-            txtDate.setText(dateStr);
-            txtDate.setTextColor(Color.BLACK);
-            txtDate.setLayoutParams(new LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT));
-
-            TextView txtDay = new TextView(this);
-            txtDay.setText(dayStr);
-            txtDay.setTextColor(Color.BLACK);
-            txtDay.setLayoutParams(new LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT));
-
-            TextView txtType = new TextView(this);
-            txtType.setText(type);
-            txtType.setTextColor(Color.BLACK);
-            txtType.setLayoutParams(new LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT));
-
-
-            TextView txtExpect = new TextView(this);
-            if (type.equals("Working day")) {
-                txtExpect.setText(formattedDailyTarget);
+                type = "Holiday";
+                targetForDay = 0f;
+            }  else if (highPerfDaysList.contains(dayStr)) {
+                type = "High Performance Day";
+                targetForDay = dailyTarget * growthMultiplier;
             } else {
-                txtExpect.setText("0");
+                type = "Working Day";
+                targetForDay = dailyTarget;
             }
-            txtExpect.setTextColor(Color.BLACK);
-            txtExpect.setLayoutParams(new LinearLayout.LayoutParams(220, LinearLayout.LayoutParams.WRAP_CONTENT));
 
+            String formattedDailyTarget = String.format("%.2f", targetForDay);
 
+            // Fetch performance data
+            SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+            int achieved = prefs.getInt("Achieved_" + dateStr, 0);
+            int quantity = prefs.getInt("Quantity_" + dateStr, 0);
+            int NOB = prefs.getInt("NOB_" + dateStr, 0);
 
+            int ABS = (NOB != 0) ? quantity / NOB : 0;
+            float ATV = (NOB != 0) ? (float) achieved / NOB : 0;
+            float ASP = (quantity != 0) ? (float) achieved / quantity : 0;
+            float percentage = (targetForDay != 0) ? (achieved / targetForDay) * 100f : 0f;
 
-            row.addView(txtDate);
-            row.addView(txtDay);
-            row.addView(txtType);
-            row.addView(txtExpect);
+            // Inflate card view
+            View cardView = getLayoutInflater().inflate(R.layout.card_daily_info, null);
 
+            ((TextView) cardView.findViewById(R.id.txtDate)).setText("Date: " + dateStr);
+            ((TextView) cardView.findViewById(R.id.txtDay)).setText("Day: " + dayStr);
+            ((TextView) cardView.findViewById(R.id.txtAchieved)).setText("Achieved: " + achieved);
+            ((TextView) cardView.findViewById(R.id.txtType)).setText("Type: " + type);
+            ((TextView) cardView.findViewById(R.id.txtExpect)).setText("Expected: " + formattedDailyTarget);
+            ((TextView) cardView.findViewById(R.id.txtAchievedPer)).setText("Achieved %: " + String.format("%.2f%%", percentage));
+            ((TextView) cardView.findViewById(R.id.txtQuantity)).setText("Quantity: " + quantity);
+            ((TextView) cardView.findViewById(R.id.txtNOB)).setText("NOB: " + NOB);
+            ((TextView) cardView.findViewById(R.id.txtABS)).setText("ABS: " + ABS);
+            ((TextView) cardView.findViewById(R.id.txtATV)).setText("ATV: " + String.format(Locale.US, "%.2f", ATV));
+            ((TextView) cardView.findViewById(R.id.txtASP)).setText("ASP: " + String.format(Locale.US, "%.2f", ASP));
 
+            LinearLayout detailsLayout = cardView.findViewById(R.id.detailsLayout);
+            cardView.setOnClickListener(v -> {
+                detailsLayout.setVisibility(detailsLayout.getVisibility() == View.GONE ? View.VISIBLE : View.GONE);
+            });
 
-
-            tableContainer.addView(row);
-
+            tableContainer.addView(cardView);
         }
-
-        Log.d("Cont","count is ; "+cnt);
-        Log.d("TotalCount","Total count is : "+TotalDaysCount);
-
-
-
-
-
     }
+
+
 }

@@ -14,11 +14,11 @@
         android:gravity="center_horizontal">
         <Button
             android:id="@+id/btnDailyTable"
-            android:layout_width="match_parent"
+            android:layout_width="320dp"
             android:layout_height="wrap_content"
             android:text="Daily YOY Table"
             android:layout_marginBottom="16dp"
-            android:backgroundTint="#6200EE"
+            android:backgroundTint="#196C92"
             android:textColor="#fff"
             android:textAllCaps="false"
             android:padding="12dp"
@@ -119,20 +119,22 @@
                 android:layout_marginTop="4dp"
                 android:inputType="numberDecimal"/>
 
+            <Button
+                android:id="@+id/btnSave"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Save"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="32dp"
+                android:backgroundTint="#196C92"
+                android:textColor="#fff"
+                android:textAllCaps="false"
+                android:padding="14dp"
+                android:textSize="16sp" />
+
         </LinearLayout>
 
-        <Button
-            android:id="@+id/btnSave"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Save And Next"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="32dp"
-            android:backgroundTint="#6200EE"
-            android:textColor="#fff"
-            android:textAllCaps="false"
-            android:padding="14dp"
-            android:textSize="16sp" />
+
     </LinearLayout>
 
 

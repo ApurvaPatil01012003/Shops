@@ -7,7 +7,6 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,16 +20,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-
-import com.google.android.material.datepicker.MaterialDatePicker;
-
 import java.util.ArrayList;
+import java.util.Calendar;
 
 public class SecondActivity extends AppCompatActivity {
 
     EditText FirstTurnOver, SecondTurnOver, edtHighPerDays,edtGrowth ;
     Spinner  spinnerShopHoli;
-    TextView ShopName,txtGrowth;
+    TextView ShopName,txtGrowth,txtFirstTurnOver,txtSecondTurnOver;
     Button btnSave;
 
     @Override
@@ -51,6 +48,10 @@ public class SecondActivity extends AppCompatActivity {
         txtGrowth = findViewById(R.id.txtGrowth);
         spinnerShopHoli = findViewById(R.id.spinnerShopHoli);
         btnSave = findViewById(R.id.btnSave);
+        txtFirstTurnOver = findViewById(R.id.txtFirstTurnOver);
+        txtFirstTurnOver.setText(getCurrentFinancialYear()+" TurnOver");
+        txtSecondTurnOver=findViewById(R.id.txtSecondTurnOver);
+        txtSecondTurnOver.setText(getCurrentFinancialYears()+" TurnOver");
 
 
         String shopName = getIntent().getStringExtra("shop_name");
@@ -96,6 +97,8 @@ public class SecondActivity extends AppCompatActivity {
 
 
 
+
+
         btnSave.setOnClickListener(v -> {
             String name = ShopName.getText().toString().trim();
             String fturnover = FirstTurnOver.getText().toString().trim();
@@ -132,12 +135,19 @@ public class SecondActivity extends AppCompatActivity {
                 Intent intent = new Intent(SecondActivity.this,GoToMAndD.class);
                 intent.putExtra("TurnOver",secondTurnOver);
                 intent.putExtra("shopsHoliday",shopHolidays);
+                intent.putExtra("HighPerformace",HighPerformDays);
+                intent.putExtra("EdtGrowth",EDTGrowth);
                 startActivity(intent);
                 finish();
-                Log.d("SecondTurnOver","TurnOver is : "+secondTurnOver);
+                Log.d("HighPerformace","HighPerformDays is : "+HighPerformDays);
+                Log.d("HighPerformace","HighPerformDays is : "+EDTGrowth);
             } else {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             }
+            getCurrentFinancialYear();
+
+
+
         });
 
 
@@ -183,16 +193,16 @@ public class SecondActivity extends AppCompatActivity {
 
 
 
-        Log.d("selected_days","selected_days is : "+name);
-
-        Log.d("selected_days","selected_days is : "+fturnover);
-
-        Log.d("selected_days","selected_days is : "+sturnover);
-
-        Log.d("selected_days","selected_days is : "+growth_per);
-        Log.d("selected_days","selected_days is : "+EditGrowth);
-        Log.d("selected_days","selected_days is : "+shopHolidays);
-        Log.d("selected_days","selected_days is : "+HighPerformDays);
+//        Log.d("selected_days","selected_days is : "+name);
+//
+//        Log.d("selected_days","selected_days is : "+fturnover);
+//
+//        Log.d("selected_days","selected_days is : "+sturnover);
+//
+//        Log.d("selected_days","selected_days is : "+growth_per);
+//        Log.d("selected_days","selected_days is : "+EditGrowth);
+//        Log.d("selected_days","selected_days is : "+shopHolidays);
+//        Log.d("selected_days","selected_days is : "+HighPerformDays);
 
 
     }
@@ -207,7 +217,7 @@ public class SecondActivity extends AppCompatActivity {
                 int secondValue = Integer.parseInt(second);
                 int growth = secondValue - firstValue;
 
-                Log.d("Growth", "Growth is : " + growth);
+              //  Log.d("Growth", "Growth is : " + growth);
 
                 if (firstValue != 0) {
                     float percentage = ((float) growth / firstValue) * 100;
@@ -231,6 +241,55 @@ public class SecondActivity extends AppCompatActivity {
             txtGrowth.setText("0 %");
             txtGrowth.setTextColor(getResources().getColor(android.R.color.darker_gray));
         }
+    }
+
+
+
+    private String getCurrentFinancialYear() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+       // Log.d("Year","Current6 year" +year + ""+month);
+
+        year=year-2;
+        int startYear, endYear;
+        if (month >= Calendar.APRIL) {
+            startYear = year;
+            endYear = year + 1;
+           // Log.d("startyear","start year is in if : "+startYear+" "+endYear);
+        } else {
+            startYear = year - 1;
+            endYear = year;
+           // Log.d("startyear","start year is in else : "+startYear+" "+endYear);
+
+        }
+        return startYear + "_" + String.valueOf(endYear).substring(2);
+
+
+    }
+
+
+    private String getCurrentFinancialYears() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+       // Log.d("Year","Current6 year" +year + ""+month);
+
+        year=year-1;
+        int startYear, endYear;
+        if (month >= Calendar.APRIL) {
+            startYear = year;
+            endYear = year + 1;
+          //  Log.d("startyear","start year is in if : "+startYear+" "+endYear);
+        } else {
+            startYear = year - 1;
+            endYear = year;
+           // Log.d("startyear","start year is in else : "+startYear+" "+endYear);
+
+        }
+        return startYear + "_" + String.valueOf(endYear).substring(2);
+
+
     }
 
 

@@ -61,7 +61,7 @@ public class YOYActivity extends AppCompatActivity {
 
     private void addHeaderRow() {
         TableRow header = new TableRow(this);
-        header.setBackgroundColor(Color.parseColor("#E0E0E0"));
+        header.setBackgroundColor(Color.parseColor("#196C92"));
 
         String[] headers = {"Month", financialYear + " (Exp)", financialYear + " (Ach)", "Achieved %"};
         for (String title : headers) {
@@ -77,35 +77,39 @@ public class YOYActivity extends AppCompatActivity {
         tableLayout.addView(header);
     }
 
+
     private void addMonthRows() {
         SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
         boolean alternate = false;
+
+        String[] parts = financialYear.split("_");
+        int fyStartYear = Integer.parseInt(parts[0]);
 
         for (String month : months) {
             TableRow row = new TableRow(this);
             row.setBackgroundColor(alternate ? Color.parseColor("#F7F7F7") : Color.WHITE);
             alternate = !alternate;
 
-            // Month TextView
             TextView tvMonth = createTextView(month);
             row.addView(tvMonth);
 
             String shortMonth = convertToShortMonth(month);
             float monthlyExpected = Turnover / 12.0f;
 
-            // Expected TextView
             TextView tvExpected = createTextView(String.format("%.2f", monthlyExpected));
             tvExpected.setOnTouchListener(getDoubleTapListener(tvExpected, shortMonth, true));
             row.addView(tvExpected);
 
-            // Achieved TextView
-            int achievedInt = prefs.getInt("data_" + shortMonth + "_" + financialYear + "_Achieved", 0);
-            String achievedVal = String.valueOf(achievedInt);
-            TextView tvAchieved = createTextView(achievedVal);
+            int dataYear = fyStartYear;
+            if (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) {
+                dataYear += 1;
+            }
+
+            int achievedInt = prefs.getInt("data_" + shortMonth + "_" + dataYear + "_Achieved", 0);
+            TextView tvAchieved = createTextView(String.valueOf(achievedInt));
             tvAchieved.setOnTouchListener(getDoubleTapListener(tvAchieved, shortMonth, false));
             row.addView(tvAchieved);
 
-            // Percentage TextView
             TextView tvPercentage = createTextView("--");
             row.addView(tvPercentage);
             tableLayout.addView(row);
@@ -120,6 +124,9 @@ public class YOYActivity extends AppCompatActivity {
         tv.setPadding(16, 16, 16, 16);
         tv.setGravity(Gravity.CENTER);
         tv.setTextColor(Color.BLACK);
+        tv.setClickable(true);
+        tv.setFocusable(true);
+        tv.setFocusableInTouchMode(true);
         return tv;
     }
 
@@ -154,7 +161,27 @@ public class YOYActivity extends AppCompatActivity {
 
             updatePercentage(tvExpected, tvAchieved, tvPercentage, shortMonth,
                     getSharedPreferences("YOY_PREFS", MODE_PRIVATE));
+
+
+            SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+
+            // Get financial year start from the `financialYear` string
+            String[] parts = financialYear.split("_");
+            int fyStartYear = Integer.parseInt(parts[0]);
+            int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar"))
+                    ? fyStartYear + 1 : fyStartYear;
+
+            if (isExpected) {
+                editor.putFloat("expected_" + shortMonth + "_" + dataYear, Float.parseFloat(newValue));
+            } else {
+                editor.putInt("data_" + shortMonth + "_" + dataYear + "_Achieved", Integer.parseInt(newValue));
+            }
+
+            editor.apply();
+
         });
+
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
@@ -166,18 +193,18 @@ public class YOYActivity extends AppCompatActivity {
             float expected = parseFloat(expectedView.getText().toString());
             float achieved = parseFloat(achievedView.getText().toString());
             String percentText = "--";
-            int colorResId = R.color.medium_percentage;
+            int colorResId = R.color.Black;
 
             if (expected != 0) {
                 float percent = (achieved / expected) * 100;
                 percentText = String.format("%.2f%%", percent);
 
-                if (percent < 70) {
-                    colorResId = R.color.high_percentage;
-                } else if (percent < 90) {
-                    colorResId = R.color.medium_percentage;
+                if (percent>=0 && percent < 70) {
+                    colorResId = R.color.Green;
+                } else if (percent >=70 && percent < 90) {
+                    colorResId = R.color.Black;
                 } else {
-                    colorResId = R.color.low_percentage;
+                    colorResId = R.color.Red;
                 }
             }
 
@@ -202,18 +229,17 @@ public class YOYActivity extends AppCompatActivity {
                 float achieved = parseFloat(achievedView.getText().toString());
 
                 String percentText = "--";
-                int colorResId = R.color.medium_percentage;
+                int colorResId = R.color.Black;
 
                 if (expected != 0) {
                     float percent = (achieved / expected) * 100;
                     percentText = String.format("%.2f%%", percent);
-
-                    if (percent < 70) {
-                        colorResId = R.color.high_percentage;
-                    } else if (percent < 90) {
-                        colorResId = R.color.medium_percentage;
+                    if (percent>=0 && percent < 70) {
+                        colorResId = R.color.Green;
+                    } else if (percent >=70 && percent < 90) {
+                        colorResId = R.color.Black;
                     } else {
-                        colorResId = R.color.low_percentage;
+                        colorResId = R.color.Red;
                     }
                 }
 

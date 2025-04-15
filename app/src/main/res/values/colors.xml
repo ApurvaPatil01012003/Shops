@@ -4,8 +4,8 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- colors.xml -->
-    <color name="low_percentage">#FF0000</color>
-    <color name="medium_percentage">#FF000000</color>
-    <color name="high_percentage">#0FE018</color> <!-- Blue -->
+    <color name="Red">#FF0000</color>
+    <color name="Black">#FF000000</color>
+    <color name="Green">#0FE018</color> <!-- Blue -->
 
 </resources>
