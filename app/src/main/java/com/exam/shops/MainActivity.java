@@ -33,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         boolean isFirstTime = sharedPref.getBoolean("isFirstTime", true);
 
         if (!isFirstTime) {
-            Intent intent = new Intent(MainActivity.this, GoToMAndD.class);
+            Intent intent = new Intent(MainActivity.this,MpinLogin.class);
             startActivity(intent);
             finish();
             return;
@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
                 if (mobile.length() == 10 && mobile.matches("\\d{10}")) {
                     saveDataToSharedPref(name, mobile, actCode);
                     Toast.makeText(this, "Data Saved!", Toast.LENGTH_SHORT).show();
-                    Intent intent = new Intent(MainActivity.this, SecondActivity.class);
+                    Intent intent = new Intent(MainActivity.this, Mpin.class);
                     intent.putExtra("shop_name", name);
                     startActivity(intent);
                     finish();

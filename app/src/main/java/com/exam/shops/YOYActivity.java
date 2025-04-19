@@ -1,6 +1,7 @@
 package com.exam.shops;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -10,17 +11,22 @@ import android.os.Looper;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 
 import java.util.Arrays;
@@ -31,7 +37,8 @@ public class YOYActivity extends AppCompatActivity {
 
     TextView txtTurnOver;
     TableLayout tableLayout;
-    int Turnover;
+   // int Turnover;
+    int Result;
     String financialYear;
 
     List<String> months = Arrays.asList(
@@ -46,100 +53,151 @@ public class YOYActivity extends AppCompatActivity {
 
         txtTurnOver = findViewById(R.id.txtTurnOver);
         tableLayout = findViewById(R.id.tableLayout);
+        Result = getIntent().getIntExtra("ResultTurnYear", 0);
+        txtTurnOver.setText("Yearly Target : " + String.valueOf(Result));
 
-        Turnover = getIntent().getIntExtra("TurnYear", 0);
+        // Turnover = getIntent().getIntExtra("TurnYear", 0);
         financialYear = getCurrentFinancialYear();
 
-        txtTurnOver.setText(String.valueOf(Turnover));
+        // txtTurnOver.setText("Yearly Target : "+String.valueOf(Turnover));
+
 
         SharedPreferences sharedPref = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-        sharedPref.edit().putString("TurnOver", String.valueOf(Turnover)).apply();
+        // sharedPref.edit().putString("TurnOver", String.valueOf(Turnover)).apply();
+        sharedPref.edit().putString("ResultTurnOver", String.valueOf(Result)).apply();
 
-        addHeaderRow();
+
+
         addMonthRows();
+
+        int total = getTotalAchievedInYear();
+        float percentOfYear = (Result != 0) ? (total * 100.0f / Result) : 0;
+
+        Log.d("TotalAchieved", "Total Achieved is: " + total);
+        Log.d("TotalPercent", "Total Achieved %: " + percentOfYear);
+
+// Optional: Save to SharedPreferences (only if used later)
+        SharedPreferences sharedPrefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        sharedPrefs.edit()
+                .putInt("TotalAchievedValue", total)
+                .putFloat("TotalAchievedPercentage", percentOfYear)
+                .apply();
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                int total = getTotalAchievedInYear();
+                float percentOfYear = (Result != 0) ? (total * 100.0f / Result) : 0;
+
+                Intent intent = new Intent(YOYActivity.this, GoToMAndD.class);
+                intent.putExtra("TotalAchived", total);
+                intent.putExtra("TotalAchPer", percentOfYear);
+                startActivity(intent);
+            }
+        });
+
+
+
+
+
     }
 
-    private void addHeaderRow() {
-        TableRow header = new TableRow(this);
-        header.setBackgroundColor(Color.parseColor("#196C92"));
-
-        String[] headers = {"Month", financialYear + " (Exp)", financialYear + " (Ach)", "Achieved %"};
-        for (String title : headers) {
-            TextView tv = new TextView(this);
-            tv.setText(title);
-            tv.setPadding(20, 20, 20, 20);
-            tv.setTextSize(16);
-            tv.setTypeface(Typeface.DEFAULT_BOLD);
-            tv.setTextColor(Color.BLACK);
-            tv.setGravity(Gravity.CENTER);
-            header.addView(tv);
-        }
-        tableLayout.addView(header);
-    }
 
 
     private void addMonthRows() {
         SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
-        boolean alternate = false;
-
         String[] parts = financialYear.split("_");
         int fyStartYear = Integer.parseInt(parts[0]);
 
         for (String month : months) {
-            TableRow row = new TableRow(this);
-            row.setBackgroundColor(alternate ? Color.parseColor("#F7F7F7") : Color.WHITE);
-            alternate = !alternate;
-
-            TextView tvMonth = createTextView(month);
-            row.addView(tvMonth);
-
             String shortMonth = convertToShortMonth(month);
-            float monthlyExpected = Turnover / 12.0f;
+            int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
 
-            TextView tvExpected = createTextView(String.format("%.2f", monthlyExpected));
-            tvExpected.setOnTouchListener(getDoubleTapListener(tvExpected, shortMonth, true));
-            row.addView(tvExpected);
+            float expected = prefs.getFloat("expected_" + shortMonth + "_" + dataYear, Result / 12.0f);
+            int achieved = prefs.getInt("data_" + shortMonth + "_" + dataYear + "_Achieved", 0);
+            float percent = (expected != 0) ? (achieved / expected) * 100 : 0;
 
-            int dataYear = fyStartYear;
-            if (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) {
-                dataYear += 1;
-            }
+            // CardView
+            CardView cardView = new CardView(this);
+            CardView.LayoutParams cardParams = new CardView.LayoutParams(
+                    CardView.LayoutParams.MATCH_PARENT,
+                    CardView.LayoutParams.WRAP_CONTENT
+            );
+            cardParams.setMargins(0, 0, 0, 32);
+            cardView.setLayoutParams(cardParams);
+            cardView.setCardElevation(8f);
+            cardView.setRadius(24f);
+            cardView.setUseCompatPadding(true);
+            cardView.setPreventCornerOverlap(true);
+            cardView.setCardBackgroundColor(Color.WHITE);
 
-            int achievedInt = prefs.getInt("data_" + shortMonth + "_" + dataYear + "_Achieved", 0);
-            TextView tvAchieved = createTextView(String.valueOf(achievedInt));
-            tvAchieved.setOnTouchListener(getDoubleTapListener(tvAchieved, shortMonth, false));
-            row.addView(tvAchieved);
+            // Inner layout
+            LinearLayout layout = new LinearLayout(this);
+            layout.setOrientation(LinearLayout.VERTICAL);
+            layout.setPadding(32, 32, 32, 32);
 
-            TextView tvPercentage = createTextView("--");
-            row.addView(tvPercentage);
-            tableLayout.addView(row);
-            updatePercentage(tvExpected, tvAchieved, tvPercentage, shortMonth, prefs);
-            addTextWatcher(tvExpected, tvAchieved, tvPercentage, shortMonth);
+            // Month
+            TextView tvMonth = createText("Month: " + month, 16, Typeface.BOLD);
+            layout.addView(tvMonth);
+
+            // Target row
+            LinearLayout targetRow = createLabeledRow("Target: ₹" + String.format("%.0f", expected));
+            TextView tvTarget = (TextView) targetRow.getChildAt(0);
+            ImageView ivEditTarget = (ImageView) targetRow.getChildAt(1);
+            ivEditTarget.setOnClickListener(v -> showEditDialog(tvTarget, shortMonth, true));
+            layout.addView(targetRow);
+
+            // Achieved row
+            LinearLayout achievedRow = createLabeledRow("Achieved: ₹" + achieved);
+            TextView tvAchieved = (TextView) achievedRow.getChildAt(0);
+            ImageView ivEditAchieved = (ImageView) achievedRow.getChildAt(1);
+            ivEditAchieved.setOnClickListener(v -> showEditDialog(tvAchieved, shortMonth, false));
+            layout.addView(achievedRow);
+
+            // Percentage
+            TextView tvPercentage = createText("Achieved Percentage: " + String.format("%.0f", percent) + "%", 14, Typeface.NORMAL);
+            layout.addView(tvPercentage);
+
+            updatePercentage(tvTarget, tvAchieved, tvPercentage, shortMonth, prefs);
+
+
+            cardView.addView(layout);
+            tableLayout.addView(cardView);
+
+            ivEditTarget.setOnClickListener(v -> {
+                showSingleEditDialog(tvTarget, tvAchieved, tvPercentage, shortMonth, true);
+            });
+
+            ivEditAchieved.setOnClickListener(v -> {
+                showSingleEditDialog(tvTarget, tvAchieved, tvPercentage, shortMonth, false);
+            });
+
+
         }
+
+
+    }
+    private int getTotalAchievedInYear() {
+        SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+        String[] parts = financialYear.split("_");
+        int fyStartYear = Integer.parseInt(parts[0]);
+        int totalAchieved = 0;
+
+        for (String month : months) {
+            String shortMonth = convertToShortMonth(month);
+            int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar"))
+                    ? fyStartYear + 1 : fyStartYear;
+
+            String key = "data_" + shortMonth + "_" + dataYear + "_Achieved";
+            totalAchieved += prefs.getInt(key, 0); // default to 0 if not found
+        }
+        Log.d("TotalAchieved","Total Achived is :"+totalAchieved);
+        return totalAchieved;
+
+
     }
 
-    private TextView createTextView(String value) {
-        TextView tv = new TextView(this);
-        tv.setText(value);
-        tv.setPadding(16, 16, 16, 16);
-        tv.setGravity(Gravity.CENTER);
-        tv.setTextColor(Color.BLACK);
-        tv.setClickable(true);
-        tv.setFocusable(true);
-        tv.setFocusableInTouchMode(true);
-        return tv;
-    }
 
-    private View.OnTouchListener getDoubleTapListener(TextView view, String shortMonth, boolean isExpected) {
-        GestureDetector gestureDetector = new GestureDetector(this, new GestureDetector.SimpleOnGestureListener() {
-            @Override
-            public boolean onDoubleTap(MotionEvent e) {
-                showEditDialog(view, shortMonth, isExpected);
-                return true;
-            }
-        });
-        return (v, event) -> gestureDetector.onTouchEvent(event);
-    }
 
     private void showEditDialog(TextView targetView, String shortMonth, boolean isExpected) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -186,6 +244,54 @@ public class YOYActivity extends AppCompatActivity {
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
     }
+
+
+    private void showSingleEditDialog(TextView tvTarget, TextView tvAchieved, TextView tvPercentage,
+                                      String shortMonth, boolean isTargetEdit) {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(isTargetEdit ? "Edit Target" : "Edit Achieved");
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+        String current = isTargetEdit ? tvTarget.getText().toString() : tvAchieved.getText().toString();
+        input.setText(parseNumericOnly(current));
+
+        builder.setView(input);
+
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            String newValue = input.getText().toString().trim();
+            if (isTargetEdit) {
+                tvTarget.setText("Target: ₹" + newValue);
+            } else {
+                tvAchieved.setText("Achieved: ₹" + newValue);
+            }
+
+            SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+
+            String[] parts = financialYear.split("_");
+            int fyStartYear = Integer.parseInt(parts[0]);
+            int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar"))
+                    ? fyStartYear + 1 : fyStartYear;
+
+            if (isTargetEdit) {
+                editor.putFloat("expected_" + shortMonth + "_" + dataYear, parseFloat(newValue));
+            } else {
+                editor.putInt("data_" + shortMonth + "_" + dataYear + "_Achieved", (int) parseFloat(newValue));
+            }
+
+            editor.apply();
+
+            // Update percentage
+            updatePercentage(tvTarget, tvAchieved, tvPercentage, shortMonth, prefs);
+            addTextWatcher(tvTarget, tvAchieved, tvPercentage, shortMonth);
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
 
     private void updatePercentage(TextView expectedView, TextView achievedView, TextView percentView,
                                   String shortMonth, SharedPreferences prefs) {
@@ -260,11 +366,16 @@ public class YOYActivity extends AppCompatActivity {
 
     private float parseFloat(String value) {
         try {
-            return Float.parseFloat(value.trim());
+            return Float.parseFloat(value.replaceAll("[^\\d.]", "").trim());
         } catch (Exception e) {
             return 0;
         }
     }
+
+    private String parseNumericOnly(String value) {
+        return value.replaceAll("[^\\d.]", "");
+    }
+
 
     private String convertToShortMonth(String fullMonth) {
         switch (fullMonth) {
@@ -299,5 +410,48 @@ public class YOYActivity extends AppCompatActivity {
         }
         return startYear + "_" + String.valueOf(endYear).substring(2);
     }
+
+    private TextView createText(String text, int sizeSp, int style) {
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextSize(sizeSp);
+        tv.setTypeface(null, style);
+        tv.setTextColor(Color.parseColor("#333333"));
+        tv.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        return tv;
+    }
+
+    private LinearLayout createLabeledRow(String text) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+        row.setPadding(0, 16, 0, 0);
+
+        TextView tv = new TextView(this);
+        tv.setText(text);
+        tv.setTextSize(14);
+        tv.setTextColor(Color.parseColor("#333333"));
+        tv.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+
+        ImageView iv = new ImageView(this);
+        iv.setImageResource(R.drawable.ic_edit);
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(60, 60);
+        iv.setLayoutParams(iconParams);
+        iv.setPadding(8, 8, 8, 8);
+
+        row.addView(tv);
+        row.addView(iv);
+
+        return row;
+    }
+
+
 
 }

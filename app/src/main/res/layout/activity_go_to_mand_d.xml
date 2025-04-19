@@ -1,100 +1,364 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
-    tools:context=".GoToMAndD">
+    android:background="#F4F6FA"
+    android:padding="30dp"
+    android:fitsSystemWindows="true">
+
+    <!-- Shop Name Header -->
+    <TextView
+        android:id="@+id/txtShopName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Shop Name: ABC Traders"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#003366"
+        android:gravity="center_horizontal"
+        android:padding="16dp"
+        android:background="#FFFFFF"
+        android:elevation="4dp"/>
+
+    <!-- YTD Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="YTD"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#003366"
+        android:padding="8dp"
+        android:background="#E8EAF6"/>
+
+    <!-- YTD Card -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardElevation="4dp"
+        card_view:cardCornerRadius="8dp"
+        android:layout_marginTop="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_horizontal">
+
+            <!-- Year Target -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/txtYearTarget"
+                    android:text="1,00,000"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#555555"
+                    android:layout_marginBottom="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:text="TGT"
+                    android:textColor="#777777"
+                    android:textSize="14sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+            <!-- Year Achievement -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/txtYearlyAch"
+                        android:text="12,00,000"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#555555"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:id="@+id/YearlyAchPer"
+                        android:text=" 75%"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#009688"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <TextView
+                    android:text="ACH"
+                    android:textColor="#777777"
+                    android:textSize="14sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- MTD Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="MTD"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#003366"
+        android:padding="8dp"
+        android:background="#E8EAF6"/>
+
+    <!-- MTD Card -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardElevation="4dp"
+        card_view:cardCornerRadius="8dp"
+        android:layout_marginTop="8dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_horizontal">
+
+            <!-- Month Target -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/txtMonthTarget"
+                    android:text="1,00,000"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#555555"
+                    android:layout_marginBottom="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:text="TGT"
+                    android:textColor="#777777"
+                    android:textSize="14sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+            <!-- Month Achievement -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/MonthlyAch"
+                        android:text="12,00,000"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#555555"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:id="@+id/MonthlyAchPer"
+                        android:text=" 75%"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#009688"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <TextView
+                    android:text="ACH"
+                    android:textColor="#777777"
+                    android:textSize="14sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Spinner Section -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@drawable/edittext_background"
-        >
-  <TextView
-      android:id="@+id/txtTitle"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:textSize="22sp"
-      android:text="Do You Want To View Monthly YOY :"
-     />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="SR"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#003366"
+            android:padding="8dp"/>
+
+        <Spinner
+            android:id="@+id/spinnerSR"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"/>
+    </LinearLayout>
+
+    <!-- SR Card -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        card_view:cardElevation="4dp"
+        card_view:cardCornerRadius="8dp"
+        android:layout_marginTop="8dp">
+
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center_horizontal">
+
+            <!-- Target -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:id="@+id/txtTargetRecentdays"
+                    android:text="1,00,000"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="#555555"
+                    android:layout_marginBottom="4dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+                <TextView
+                    android:text="TGT"
+                    android:textColor="#777777"
+                    android:textSize="14sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+
+            <!-- Achieved -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center_horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        android:id="@+id/txtAchievedRecentdays"
+                        android:text="12,00,000"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#555555"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                    <TextView
+                        android:id="@+id/txtAchievedPerRecentdays"
+                        android:text=" 75%"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="#009688"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                </LinearLayout>
+
+                <TextView
+                    android:text="ACH"
+                    android:textColor="#777777"
+                    android:textSize="14sp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Line Chart -->
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lineChart"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:layout_marginTop="16dp"/>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="20dp"
+        android:weightSum="2">
+
         <Button
             android:id="@+id/btnyes"
-            android:layout_width="150dp"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="YES"
+            android:layout_weight="1"
+            android:text="Monthly Planner"
             android:textColor="@color/black"
             android:padding="16dp"
-            android:backgroundTint="#59AAE7"
-            />
+            android:backgroundTint="#59AAE7"/>
+
         <Button
-            android:id="@+id/btnNo"
-            android:layout_width="150dp"
+            android:id="@+id/btnDyes"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_marginStart="20dp"
-            android:text="NO"
+            android:text="Day Planner"
             android:textColor="@color/black"
             android:padding="16dp"
-            android:backgroundTint="#59AAE7"
-            />
-        </LinearLayout>
-
+            android:backgroundTint="#59AAE7"/>
     </LinearLayout>
-
-
-
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:orientation="vertical"
-        android:padding="16dp"
-        android:background="@drawable/edittext_background"
-        >
-        <TextView
-            android:id="@+id/txtDailyTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="22sp"
-            android:text="Do You Want To View Daily YOY :"
-            />
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-            <Button
-                android:id="@+id/btnDyes"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:text="YES"
-                android:textColor="@color/black"
-                android:padding="16dp"
-                android:backgroundTint="#59AAE7"
-                />
-            <Button
-                android:id="@+id/btnDNo"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:text="NO"
-                android:textColor="@color/black"
-                android:padding="16dp"
-                android:backgroundTint="#59AAE7"
-                />
-        </LinearLayout>
-
-    </LinearLayout>
-
-
-
 
 </LinearLayout>

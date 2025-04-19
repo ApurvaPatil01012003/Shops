@@ -17,22 +17,19 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Month Wise YOY"
+            android:text="Month Wise Planner"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="#131314"
+            android:textColor="#003366"
             android:layout_marginBottom="16dp"
             android:layout_gravity="center" />
-        <HorizontalScrollView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="12dp"
-            android:background="@drawable/bg_table_card"
             android:elevation="2dp">
 
 
@@ -48,7 +45,7 @@
                 android:stretchColumns="*" />
 
         </LinearLayout>
-        </HorizontalScrollView>
+
 
     </LinearLayout>
 

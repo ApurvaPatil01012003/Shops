@@ -31,6 +31,11 @@ public class YOYSecondActivity extends AppCompatActivity {
     private String key;
     private int updatedValue;
     private int updatedValueDaily;
+    private float monthlyAchieved = 0f;
+    private float monthlyPercent = 0f;
+    private float monthlyTarget = 0f;
+
+
 
 
     @Override
@@ -56,14 +61,18 @@ public class YOYSecondActivity extends AppCompatActivity {
             Log.d("Holidqay", "Holiday is : " + Holiday);
         }
 
-        int SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
-        Log.d("TURNOVER", "turn over is : ; " + SecondTurnOverValue);
+//        int SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
+//        Log.d("TURNOVER", "turn over is : ; " + SecondTurnOverValue);
+
+        int Result = getIntent().getIntExtra("ResultTurnYear", 0);
+        Log.d("TURNOVER", "Result turn over is : ; " + Result);
+
 
         String High_Per_Day = getIntent().getStringExtra("HighPerformance");
         int Growth_Per = getIntent().getIntExtra("Growth", 0);
 
-//Log.d("HIGHPERFORM","HIGH DAY"+High_Per_Day);
-//Log.d("Growth","groth is : "+Growth_Per);
+        Log.d("HIGHPERFORM", "HIGH DAY" + High_Per_Day);
+        Log.d("Growth", "groth is : " + Growth_Per);
 
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText("Select Date")
@@ -101,14 +110,6 @@ public class YOYSecondActivity extends AppCompatActivity {
                 }
 
 
-//                if (!date.isEmpty() && !Achievedstr.isEmpty() && !Quantitystr.isEmpty() && !nobstr.isEmpty()) {
-//                    SaveDataToSharedPref(date, Integer.parseInt(Achievedstr), Integer.parseInt(Quantitystr), Integer.parseInt(nobstr));
-//                    Toast.makeText(YOYSecondActivity.this, "Save data", Toast.LENGTH_SHORT).show();
-//
-//                } else {
-//                    Toast.makeText(YOYSecondActivity.this, "Please fill the all feilds", Toast.LENGTH_SHORT).show();
-//                }
-
                 if (!date.isEmpty() && !Achievedstr.isEmpty() && !Quantitystr.isEmpty() && !nobstr.isEmpty()) {
                     int ach = Integer.parseInt(Achievedstr);
                     int qty = Integer.parseInt(Quantitystr);
@@ -121,7 +122,6 @@ public class YOYSecondActivity extends AppCompatActivity {
                 } else {
                     Toast.makeText(YOYSecondActivity.this, "Please fill all fields", Toast.LENGTH_SHORT).show();
                 }
-
 
 
             }
@@ -156,7 +156,8 @@ public class YOYSecondActivity extends AppCompatActivity {
 
                 Intent intent = new Intent(YOYSecondActivity.this, DailyTableYOY.class);
                 intent.putExtra("ShopHoliday", Holiday);
-                intent.putExtra("TurnYear", SecondTurnOverValue);
+                intent.putExtra("ResultTurnYear", Result);
+                //intent.putExtra("TurnYear", SecondTurnOverValue);
                 intent.putExtra("Achived_Value", updatedValueDaily);
                 intent.putExtra("Quantity", quantity);
                 intent.putExtra("NOB", nob);
@@ -166,13 +167,40 @@ public class YOYSecondActivity extends AppCompatActivity {
 //                Log.d("Updated_Daily", "Updated for daily: " + updatedValueDaily);
 //                Log.d("Updated_Daily", "quantity for daily: " + quantity);
 //                Log.d("Updated_Daily", "nob for daily: " + nob);
-                startActivity(intent);
-
+                // startActivity(intent);
+                startActivityForResult(intent, 101);
                 ClearAllText();
 
             }
         });
 
+
+//        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+//            @Override
+//            public void handleOnBackPressed() {
+//                Intent intent = new Intent(YOYSecondActivity.this, GoToMAndD.class);
+//                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+//
+////                if (key != null && !key.isEmpty()) {
+////                    intent.putExtra("data_key", key);
+////                    intent.putExtra("data_value", updatedValue);
+////
+////                }
+//                if (key != null && !key.isEmpty()) {
+//                    intent.putExtra("data_key", key);
+//                    intent.putExtra("data_value", updatedValue);
+//                }
+//
+//// Always send the monthly data
+//                intent.putExtra("MonthlyAchieved", monthlyAchieved);
+//                intent.putExtra("MonthlyAchievedPercent", monthlyPercent);
+//
+//
+//
+//                startActivity(intent);
+//                finish();
+//            }
+//        });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -180,21 +208,27 @@ public class YOYSecondActivity extends AppCompatActivity {
                 Intent intent = new Intent(YOYSecondActivity.this, GoToMAndD.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
+                intent.putExtra("MonthlyTarget", Result / 12f);
+                intent.putExtra("MonthlyAchieved", updatedValueDaily);
+                SharedPreferences todayPrefs = getSharedPreferences("TodayData", MODE_PRIVATE);
+                float percent = todayPrefs.getFloat("today_percent", 0f);
+                intent.putExtra("MonthlyAchievedPercent", percent);
+
                 if (key != null && !key.isEmpty()) {
                     intent.putExtra("data_key", key);
                     intent.putExtra("data_value", updatedValue);
-
                 }
 
-                startActivity(intent);
+
+                setResult(RESULT_OK);
+
+               // startActivity(intent);
                 finish();
             }
         });
-
-
     }
 
-    public void ClearAllText() {
+        public void ClearAllText() {
         et_date.setText("");
         edtAchieved.setText("");
         edtQty.setText("");
@@ -276,7 +310,63 @@ public class YOYSecondActivity extends AppCompatActivity {
         this.key = key;
         this.updatedValueDaily = updatedValueDaily;
 
+
+
+    //chage the Achived and percentage in cardview of GotoActivity
+        String todayStr = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(System.currentTimeMillis());
+        if (formattedDate.equals(todayStr)) {
+            SharedPreferences todayPref = getSharedPreferences("TodayData", MODE_PRIVATE);
+            SharedPreferences.Editor todayEditor = todayPref.edit();
+
+            String expectedStr = todayPref.getString("today_expected", "0");
+            float expected = 0f;
+            try {
+                expected = Float.parseFloat(expectedStr);
+            } catch (Exception e) {
+                expected = 0f;
+            }
+
+            float percentage = (expected != 0f) ? ((float) updatedValueDaily / expected) * 100f : 0f;
+
+            todayEditor.putInt("today_achieved", updatedValueDaily);
+            todayEditor.putFloat("today_percent", percentage);
+            todayEditor.apply();
+
+            Log.d("TodayData", "Only updated Achieved=" + updatedValueDaily + ", Percentage=" + percentage);
+        }
+
+
     }
+//   public void SaveDailyDataToSharedPref(String dateInput, int Achieved, int Quantity, int nob) {
+//       SharedPreferences sharedPreferences = getSharedPreferences("YOY_PREFS", MODE_PRIVATE); // <- Fixed
+//       SharedPreferences.Editor editor = sharedPreferences.edit();
+//
+//       SimpleDateFormat inputFormat = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
+//       SimpleDateFormat saveFormat = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH);
+//
+//       String formattedDate = "";
+//       try {
+//           formattedDate = saveFormat.format(inputFormat.parse(dateInput));
+//       } catch (Exception e) {
+//           e.printStackTrace();
+//       }
+//
+//       // Extract day, month, year
+//       String[] dateParts = formattedDate.split("-");
+//       String day = dateParts[0];
+//       String month = dateParts[1];
+//       String year = dateParts[2];
+//
+//       String key = "day_" + day + "_" + month + "_" + year + "_Achieved";
+//       int prev = sharedPreferences.getInt(key, 0);
+//       updatedValueDaily = prev + Achieved;
+//
+//       editor.putInt(key, updatedValueDaily);
+//       editor.putString("last_selected_date", formattedDate);
+//       editor.apply();
+//
+//       Log.d("YOY_DATA_FIXED", key + " = " + updatedValueDaily);
+//   }
 
 
     private String convertToShortMonth(String fullMonth) {
@@ -311,6 +401,25 @@ public class YOYSecondActivity extends AppCompatActivity {
 
 
     }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 101 && resultCode == RESULT_OK && data != null) {
+            monthlyAchieved = data.getFloatExtra("MonthlyAchieved", 0f);
+            monthlyPercent = data.getFloatExtra("MonthlyAchievedPercent", 0f);
+
+            // Assume 12 months in year
+            monthlyTarget = getIntent().getIntExtra("ResultTurnYear", 0) / 12f;
+
+            Toast.makeText(this,
+                    "Month Total: ₹" + monthlyAchieved +
+                            "\nAchieved: " + String.format("%.2f", monthlyPercent) + "%",
+                    Toast.LENGTH_LONG
+            ).show();
+        }
+    }
+
 
 
 }
