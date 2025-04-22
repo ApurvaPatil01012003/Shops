@@ -48,8 +48,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class DailyTableYOY extends AppCompatActivity {
     Spinner spinnerMonth;
@@ -72,6 +74,28 @@ public class DailyTableYOY extends AppCompatActivity {
     float monthlyAchievedPercent = 0f;
 
 
+    Map<String, String> publicHolidayMap = new HashMap<String, String>() {{
+        put("April", "14-04-2025");
+        put("May", "01-05-2025");
+        put("June", "17-06-2025");
+        put("July", "21-07-2025");
+        put("August", "15-08-2025");
+        put("September", "29-09-2025");
+        put("October", "02-10-2025");
+        put("November", "11-11-2025");
+        put("December", "25-12-2025");
+        put("January", "26-01-2026");
+        put("February", "19-02-2026");
+        put("March", "29-03-2026");
+    }};
+
+    private List<Float> originalWeights;
+    private List<Float> finalTargetsGlobal;
+    private List<String> dateListGlobal;
+    private List<String> dayTypesGlobal;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,15 +116,15 @@ public class DailyTableYOY extends AppCompatActivity {
 
 
         Holiday = getIntent().getStringExtra("ShopHoliday");
-        Result = getIntent().getIntExtra("ResultTurnYear",0);
-       // SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
+        Result = getIntent().getIntExtra("ResultTurnYear", 0);
+        // SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
         achievedValue = getIntent().getIntExtra("Achived_Value", 0);
         quantities = getIntent().getIntExtra("Quantity", 0);
         nobValue = getIntent().getIntExtra("NOB", 0);
         highPerDay = getIntent().getStringExtra("HighPerDay");
         growthPer = getIntent().getIntExtra("Growth", 0);
 
-Log.d("YOYDAILY","Result turnover is : "+Result);
+        Log.d("YOYDAILY", "Result turnover is : " + Result);
         Log.d("High", "High Performance Day : " + Holiday);
         Log.d("High", "High Performance Day : " + highPerDay);
         Log.d("High", "High Performance Day : " + growthPer);
@@ -128,6 +152,10 @@ Log.d("YOYDAILY","Result turnover is : "+Result);
                     selectedMonth.set(Calendar.MONTH, monthIndex);
                     selectedMonth.set(Calendar.DAY_OF_MONTH, 1);
                     generateDateRows(selectedMonth);
+                    getExpectedSumForPastDays(15);
+                    getExpectedSumForPastDays(7);
+
+
                 }
             }
 
@@ -137,12 +165,14 @@ Log.d("YOYDAILY","Result turnover is : "+Result);
 
         });
 
+
         btnCPDF.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 generatePDF();
 
             }
+
         });
     }
 
@@ -213,7 +243,8 @@ Log.d("YOYDAILY","Result turnover is : "+Result);
 
     private void generateDateRows(Calendar startDate) {
         tableContainer.removeAllViews();
-        monthlyAchievedTotal = 0f; // Reset when month changes
+        monthlyAchievedTotal = 0f;
+
 
 
         int year = startDate.get(Calendar.YEAR);
@@ -232,8 +263,6 @@ Log.d("YOYDAILY","Result turnover is : "+Result);
                 highPerfDaysList.add(day.trim());
             }
         }
-
-
         int workingDays = 0;
         int highPerfDays = 0;
 
@@ -267,35 +296,149 @@ Log.d("YOYDAILY","Result turnover is : "+Result);
             dailyTarget = monthlyTarget / workingDays;
         }
 
+
+        List<String> prePublicHighPerfDates = new ArrayList<>();
+        List<String> publicHolidayDates = new ArrayList<>(publicHolidayMap.values());
+
+        for (String holidayDateStr : publicHolidayDates) {
+            try {
+                Calendar holidayCal = Calendar.getInstance();
+                holidayCal.setTime(dateFormat.parse(holidayDateStr));
+
+                for (int i = 1; i <= 7; i++) {
+                    Calendar preCal = (Calendar) holidayCal.clone();
+                    preCal.add(Calendar.DAY_OF_MONTH, -i);
+
+                    String preDateStr = dateFormat.format(preCal.getTime());
+                    String preDayStr = dayFormat.format(preCal.getTime());
+
+
+                    if (!publicHolidayDates.contains(preDateStr) && !Holiday.equals(preDayStr)) {
+                        prePublicHighPerfDates.add(preDateStr);
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        List<Float> rawTargets = new ArrayList<>();
+        List<String> dayTypes = new ArrayList<>();
+        List<String> dateList = new ArrayList<>();
+
+        float rawTargetSum = 0f;
+
         for (int i = 1; i <= daysInMonth; i++) {
             cal.set(Calendar.DAY_OF_MONTH, i);
             String dateStr = dateFormat.format(cal.getTime());
             String dayStr = dayFormat.format(cal.getTime());
+            dateList.add(dateStr);
 
             String type;
-            float targetForDay;
+            float rawTarget;
 
-            if (Holiday.equals(dayStr)) {
+            if (publicHolidayDates.contains(dateStr)) {
+                type = "Public Holiday";
+                rawTarget = 0f;
+            } else if (Holiday.equals(dayStr)) {
                 type = "Holiday";
-                targetForDay = 0f;
-            } else if (highPerfDaysList.contains(dayStr)) {
+                rawTarget = 0f;
+            } else if (highPerfDaysList.contains(dayStr) || prePublicHighPerfDates.contains(dateStr)) {
                 type = "High Performance Day";
-                targetForDay = dailyTarget * growthMultiplier;
+                rawTarget = 1f * growthMultiplier;  // Weighted
             } else {
                 type = "Working Day";
-                targetForDay = dailyTarget;
+                rawTarget = 1f;
             }
 
+            dayTypes.add(type);
+            rawTargets.add(rawTarget);
+
+            if (rawTarget > 0f) {
+                rawTargetSum += rawTarget;
+            }
+        }
+
+
+        float scalingFactor = (rawTargetSum != 0) ? (monthlyTarget / rawTargetSum) : 1f;
+
+        List<Float> finalTargets = new ArrayList<>();
+        finalTargets.clear();
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+
+        float totalEditedTarget = 0f;
+        float totalAutoTargetWeight = 0f;
+
+        List<Boolean> isUserEdited = new ArrayList<>();
+
+        for (int i = 0; i < rawTargets.size(); i++) {
+            String dateKey = dateList.get(i);
+            String savedKey = "Expected_" + dateKey;
+            float saved = prefs.getFloat(savedKey, -1f);
+
+            if (saved >= 0) {
+                finalTargets.add(saved);
+                totalEditedTarget += saved;
+                isUserEdited.add(true);
+            } else {
+                finalTargets.add(0f); // placeholder
+                totalAutoTargetWeight += rawTargets.get(i);
+                isUserEdited.add(false);
+            }
+        }
+
+
+
+        float remainingTarget = monthlyTarget - totalEditedTarget;
+        float autoScaling = (totalAutoTargetWeight > 0) ? (remainingTarget / totalAutoTargetWeight) : 0f;
+
+        for (int i = 0; i < finalTargets.size(); i++) {
+            if (!isUserEdited.get(i)) {
+                float adjusted = rawTargets.get(i) * autoScaling;
+                finalTargets.set(i, adjusted);
+            }
+        }
+
+
+
+        // Debug: Sum check
+        float sum = 0f;
+        for (float f : finalTargets) sum += f;
+        Log.d("TARGET_CHECK", "Expected: " + monthlyTarget + " | Calculated sum: " + sum);
+
+        // Proceed to build UI
+        for (int i = 0; i < daysInMonth; i++) {
+            String dateStr = dateList.get(i);
+            String type = dayTypes.get(i);
+            float targetForDay = finalTargets.get(i);
+
+            cal.set(Calendar.DAY_OF_MONTH, i + 1);
+            String dayStr = dayFormat.format(cal.getTime());
+
+            //String formattedDailyTarget = String.format("%.2f", targetForDay);
+            float savedExpected = prefs.getFloat("Expected_" + dateStr, -1f);
+            if (savedExpected >= 0) {
+                targetForDay = savedExpected;
+            }
             String formattedDailyTarget = String.format("%.2f", targetForDay);
 
-            // Fetch performance data
-            SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+            //  SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
             achieved = prefs.getInt("Achieved_" + dateStr, 0);
             monthlyAchievedTotal += achieved;
 
+          //  SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+            SharedPreferences.Editor editor = prefs.edit();
+
+
+            if (!prefs.contains("Expected_" + dateStr)) {
+                editor.putFloat("Expected_" + dateStr, targetForDay);
+                editor.apply();
+            }
+
+
             int quantity = prefs.getInt("Quantity_" + dateStr, 0);
             int NOB = prefs.getInt("NOB_" + dateStr, 0);
-
             int ABS = (NOB != 0) ? quantity / NOB : 0;
             float ATV = (NOB != 0) ? (float) achieved / NOB : 0;
             float ASP = (quantity != 0) ? (float) achieved / quantity : 0;
@@ -373,13 +516,29 @@ Log.d("YOYDAILY","Result turnover is : "+Result);
 
             };
 
+
             cardView.findViewById(R.id.btnEditExpected).setOnClickListener(v -> {
                 showEditFieldDialog("Expected", String.valueOf(expectedValue[0]), newVal -> {
-                    expectedValue[0] = Float.parseFloat(newVal);
+                    float newExpected = Float.parseFloat(newVal);
+                    float oldExpected = expectedValue[0];
+                    float delta = newExpected - oldExpected;
+
+                    expectedValue[0] = newExpected;
                     txtExpect.setText("Expected: ₹" + newVal);
                     updateMetrics.run();
+
+
+
+                    // Rebalance other days
+                    rebalanceTargets(dateStr, delta);
+
+                 //   SharedPreferences.Editor editor = prefs.edit();
+                    editor.putFloat("Expected_" + dateStr, expectedValue[0]);
+                    editor.apply();
+
                 });
             });
+
 
 
             cardView.findViewById(R.id.btnEditAchieved).setOnClickListener(v -> {
@@ -413,27 +572,69 @@ Log.d("YOYDAILY","Result turnover is : "+Result);
             String todayStr = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Calendar.getInstance().getTime());
 
             if (dateStr.equals(todayStr)) {
-                SharedPreferences.Editor editor = getSharedPreferences("TodayData", MODE_PRIVATE).edit();
+               // SharedPreferences.Editor editor = getSharedPreferences("TodayData", MODE_PRIVATE).edit();
                 editor.putString("today_expected", formattedDailyTarget);
                 editor.putInt("today_achieved", achieved);
                 editor.putString("today_type", type);
                 editor.putFloat("today_percent", percentage);
 
-                editor.putInt("today_abs",ABS);
+                editor.putInt("today_abs", ABS);
                 editor.putFloat("today_atv", ATV);
                 editor.putFloat("today_asp", ASP);
 
                 editor.apply();
 
 
-        }
+            }
 
 
         }
+
         monthlyTarget = Result / 12f;
         monthlyAchievedPercent = (monthlyTarget != 0) ? (monthlyAchievedTotal * 100f / monthlyTarget) : 0f;
 
         Log.d("MonthlySummary", "Achieved: " + monthlyAchievedTotal + " | Percent: " + monthlyAchievedPercent);
+
+        // Add at the end of generateDateRows()
+        List<Float> originalWeights = new ArrayList<>(rawTargets);  // Keep original weights
+
+
+        this.originalWeights = originalWeights;
+        this.dateListGlobal = new ArrayList<>(dateList);
+        this.finalTargetsGlobal = new ArrayList<>(finalTargets);
+        this.dayTypesGlobal = new ArrayList<>(dayTypes);
+
+//
+//        // Calculate and save last 7 and 15 days expected target total
+//        float expected7 = 0f;
+//        float expected15 = 0f;
+//
+//        SimpleDateFormat keyFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+//        Calendar today = Calendar.getInstance();
+//        SharedPreferences.Editor editor = getSharedPreferences("Shop Data", MODE_PRIVATE).edit();
+//
+//        for (int i = 1; i <= 15; i++) {
+//            Calendar calCopy = (Calendar) today.clone();
+//            calCopy.add(Calendar.DAY_OF_MONTH, -i);
+//            String dateKey = keyFormat.format(calCopy.getTime());
+//            float expectedForDay = getSharedPreferences("Shop Data", MODE_PRIVATE).getFloat("Expected_" + dateKey, -1);
+//
+//            if (expectedForDay >= 0) {
+//                if (i <= 7) expected7 += expectedForDay;
+//                expected15 += expectedForDay;
+//            }
+//        }
+//
+//// Save them for GoToActivity
+//        editor.putFloat("Expected_Target_15_Days", expected15);
+//        editor.putFloat("Expected_Target_7_Days", expected7);
+//        editor.apply();
+//
+//        Log.d("ExpectedSave", "15 days: ₹" + expected15 + " | 7 days: ₹" + expected7);
+
+
+
+
 
     }
 
@@ -625,13 +826,110 @@ Log.d("YOYDAILY","Result turnover is : "+Result);
 
     @Override
     public void onBackPressed() {
+        super.onBackPressed();
         Intent intent = new Intent();
         intent.putExtra("MonthlyAchieved", monthlyAchievedTotal);
         intent.putExtra("MonthlyAchievedPercent", monthlyAchievedPercent);
+        intent.putExtra("data_updated", true);
         setResult(RESULT_OK, intent);
-        super.onBackPressed();
+        finish();
     }
 
+
+
+
+
+    private void rebalanceTargets(String editedDate, float delta) {
+        float totalMonthlyTarget = Result;
+
+        // Find index of the edited date
+        int editedIndex = dateListGlobal.indexOf(editedDate);
+        if (editedIndex == -1) return;
+
+        // Calculate total weight of future days (excluding holidays)
+        float futureWeightSum = 0f;
+        for (int i = editedIndex + 1; i < dateListGlobal.size(); i++) {
+            String type = dayTypesGlobal.get(i);
+            if (type.equals("Holiday") || type.equals("Public Holiday")) continue;
+
+            futureWeightSum += originalWeights.get(i);
+        }
+
+        if (futureWeightSum == 0f) return;
+
+        SharedPreferences prefs=getSharedPreferences("Shop Data",MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        for (int i = editedIndex + 1; i < dateListGlobal.size(); i++) {
+            String type = dayTypesGlobal.get(i);
+            if (type.equals("Holiday") || type.equals("Public Holiday")) continue;
+
+            float weight = originalWeights.get(i);
+            float adjustment = (weight / futureWeightSum) * (-delta);
+
+            float updated = finalTargetsGlobal.get(i) + adjustment;
+            finalTargetsGlobal.set(i, updated);
+
+            editor.putFloat("Expected_" + dateListGlobal.get(i), updated);
+
+            // Update UI and Achieved %
+            View card = tableContainer.getChildAt(i);
+            if (card != null) {
+                TextView txtExpect = card.findViewById(R.id.txtExpect);
+                txtExpect.setText("Expected: ₹" + String.format("%.2f", updated));
+
+                String achievedStr = ((TextView) card.findViewById(R.id.txtAchieved)).getText().toString().replace("Achieved: ₹", "").trim();
+                float achievedVal = 0f;
+                try {
+                    achievedVal = Float.parseFloat(achievedStr);
+                } catch (NumberFormatException e) {
+                    Log.e("ParseError", "Invalid achieved value: " + achievedStr);
+                }
+
+                float percent = (updated != 0f) ? (achievedVal / updated) * 100f : 0f;
+
+                TextView txtAchievedPer = card.findViewById(R.id.txtAchievedPer);
+                txtAchievedPer.setText("Achieved %: " + String.format("%.2f%%", percent));
+
+                if (percent < 70) {
+                    txtAchievedPer.setTextColor(Color.parseColor("#4CAF50"));
+                } else if (percent < 90) {
+                    txtAchievedPer.setTextColor(Color.BLACK);
+                } else {
+                    txtAchievedPer.setTextColor(Color.parseColor("#F44336"));
+                }
+
+
+                editor.apply();
+
+            }
+
+        }
+
+
+    }
+
+
+
+    private float getExpectedSumForPastDays(int numDays) {
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+        Calendar cal = Calendar.getInstance();
+
+        float totalExpected = 0f;
+
+        for (int i = 1; i <= numDays; i++) {
+            cal.add(Calendar.DAY_OF_MONTH, -1);
+            String dateKey = sdf.format(cal.getTime());
+            float expected = prefs.getFloat("Expected_" + dateKey, -1f);
+
+            if (expected >= 0f) {
+                totalExpected += expected;
+            }
+        }
+
+        Log.d("ExpectedSum", numDays + " days total: ₹" + totalExpected);
+        return totalExpected;
+    }
 
 
 

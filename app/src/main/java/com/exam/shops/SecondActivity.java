@@ -20,14 +20,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 
 public class SecondActivity extends AppCompatActivity {
 
-    EditText FirstTurnOver, SecondTurnOver,edtGrowth ;
+    EditText FirstTurnOver, SecondTurnOver, edtGrowth;
 
-    TextView ShopName,txtGrowth ,txtFirstTurnOver,txtSecondTurnOver,txtGrowthShow;
+    TextView ShopName, txtGrowth, txtFirstTurnOver, txtSecondTurnOver, txtGrowthShow;
     Button btnSave;
 
     @Override
@@ -44,26 +45,32 @@ public class SecondActivity extends AppCompatActivity {
         ShopName = findViewById(R.id.ShopName);
         FirstTurnOver = findViewById(R.id.FirstTurnOver);
         SecondTurnOver = findViewById(R.id.SecondTurnOver);
-        edtGrowth=findViewById(R.id.edtGrowth);
+        edtGrowth = findViewById(R.id.edtGrowth);
         txtGrowth = findViewById(R.id.txtGrowth);
         btnSave = findViewById(R.id.btnSave);
         txtFirstTurnOver = findViewById(R.id.txtFirstTurnOver);
-       txtFirstTurnOver.setText(getCurrentFinancialYear()+" TurnOver");
-        txtSecondTurnOver=findViewById(R.id.txtSecondTurnOver);
-        txtSecondTurnOver.setText(getCurrentFinancialYears()+" TurnOver");
-        txtGrowthShow=findViewById(R.id.txtGrowthShow);
+        txtFirstTurnOver.setText(getCurrentFinancialYear() + " TurnOver");
+        txtSecondTurnOver = findViewById(R.id.txtSecondTurnOver);
+        txtSecondTurnOver.setText(getCurrentFinancialYears() + " TurnOver");
+        txtGrowthShow = findViewById(R.id.txtGrowthShow);
 
-        String shopName = getIntent().getStringExtra("shop_name");
+        Intent receivedIntent = getIntent();
+        String shopName = receivedIntent.getStringExtra("shop_name");
         ShopName.setText(shopName);
-        String holiday =getIntent().getStringExtra("shopsHoliday");
+        String holiday = getIntent().getStringExtra("shopsHoliday");
+        String highPerformDay = getIntent().getStringExtra("HighPerformace");
 
+
+        Log.d("INTENT_DEBUG", "Sending holiday: " + holiday);
+        Log.d("INTENT_DEBUG", "Sending highPerform: " + highPerformDay);
 
         btnSave.setOnClickListener(v -> {
             String name = ShopName.getText().toString().trim();
+
             String fturnover = FirstTurnOver.getText().toString().trim();
             String sturnover = SecondTurnOver.getText().toString().trim();
-            String EditGrowth= edtGrowth.getText().toString().trim();
-            String  GrowthShow=txtGrowthShow.getText().toString().trim();
+            String EditGrowth = edtGrowth.getText().toString().trim();
+            String GrowthShow = txtGrowthShow.getText().toString().trim();
 
             if (fturnover.isEmpty() || sturnover.isEmpty()) {
                 Toast.makeText(this, "Enter both turnover values", Toast.LENGTH_SHORT).show();
@@ -72,8 +79,8 @@ public class SecondActivity extends AppCompatActivity {
 
             int firstTurnOver = Integer.parseInt(fturnover);
             int secondTurnOver = Integer.parseInt(sturnover);
-            int EDTGrowth =Integer.parseInt(EditGrowth);
-           int Result =Integer.parseInt(GrowthShow);
+            int EDTGrowth = Integer.parseInt(EditGrowth);
+            int Result = Integer.parseInt(GrowthShow);
 
 
             String growth_per = txtGrowth.getText().toString().trim();
@@ -90,18 +97,20 @@ public class SecondActivity extends AppCompatActivity {
 
 
             if (!name.isEmpty() && !growth_per.isEmpty()) {
-                saveDataToSharedPref(name, holiday,firstTurnOver, secondTurnOver, growths,EDTGrowth,Result);
+                saveDataToSharedPref(name, holiday, highPerformDay, firstTurnOver, secondTurnOver, growths, EDTGrowth, Result);
                 Toast.makeText(this, "Data Saved!", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(SecondActivity.this,Holi_High_Day.class);
-              //  Intent intent = new Intent(SecondActivity.this,GoToMAndD.class);
-                intent.putExtra("ResultTurnover",Result);
-                intent.putExtra("TurnOver",secondTurnOver);
-                intent.putExtra("ShopName",name);
-                intent.putExtra("EdtGrowth",EDTGrowth);
+//                Intent intent = new Intent(SecondActivity.this,Holi_High_Day.class);
+                Intent intent = new Intent(SecondActivity.this, GoToMAndD.class);
+                intent.putExtra("ResultTurnover", Result);
+                intent.putExtra("TurnOver", secondTurnOver);
+                intent.putExtra("ShopName", name);
+                intent.putExtra("shopsHoliday", holiday);
+                intent.putExtra("HighPerformace", highPerformDay);
+                intent.putExtra("EdtGrowth", EDTGrowth);
                 startActivity(intent);
                 finish();
 
-                Log.d("HighPerformace","HighPerformDays is : "+EDTGrowth);
+                Log.d("HighPerformace", "HighPerformDays is : " + EDTGrowth);
             } else {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
             }
@@ -115,10 +124,10 @@ public class SecondActivity extends AppCompatActivity {
                 return;
             }
 
-               EDTGrowth = Integer.parseInt(editGrowthStr);
-               Result = Integer.parseInt(growthShowStr);
+            EDTGrowth = Integer.parseInt(editGrowthStr);
+            Result = Integer.parseInt(growthShowStr);
 
-            Log.d("Shows","Shows growth s : "+growthShowStr);
+            Log.d("Shows", "Shows growth s : " + growthShowStr);
 
 
         });
@@ -149,31 +158,30 @@ public class SecondActivity extends AppCompatActivity {
         });
 
     }
-        public abstract class SimpleTextWatcher implements TextWatcher {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
 
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
+    public abstract class SimpleTextWatcher implements TextWatcher {
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }
 
+        @Override
+        public void afterTextChanged(Editable s) {
+        }
+    }
 
-
-    private void saveDataToSharedPref(String name, String holiday,int fturnover, int sturnover,int growth_per,int EditGrowth,int Result ) {
-        SharedPreferences sharedPref = getSharedPreferences("ShopData", MODE_PRIVATE);
+    private void saveDataToSharedPref(String name, String holiday, String highPerformDay, int fturnover, int sturnover, int growth_per, int EditGrowth, int Result) {
+        SharedPreferences sharedPref = getSharedPreferences("shop_data", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString("shop_name", name);
-        editor.putString("shop_holiday",holiday);
+        editor.putString("Shop_Holiday", holiday);
+        editor.putString("selected_days", highPerformDay);
         editor.putInt("Fturnover", fturnover);
         editor.putInt("Sturnover", sturnover);
         editor.putInt("Growth_Per", growth_per);
-        editor.putInt("editGrowth",EditGrowth);
-        editor.putInt("result",Result);
+        editor.putInt("editGrowth", EditGrowth);
+        editor.putInt("result", Result);
         editor.apply();
 
-Log.d("HOLIDAYSIN_SECOND ","holiday is : "+holiday);
 
 //        Log.d("selected_days","selected_days is : "+name);
 //
@@ -199,7 +207,7 @@ Log.d("HOLIDAYSIN_SECOND ","holiday is : "+holiday);
                 int secondValue = Integer.parseInt(second);
                 int growth = secondValue - firstValue;
 
-              //  Log.d("Growth", "Growth is : " + growth);
+                //  Log.d("Growth", "Growth is : " + growth);
 
                 if (firstValue != 0) {
                     float percentage = ((float) growth / firstValue) * 100;
@@ -226,23 +234,22 @@ Log.d("HOLIDAYSIN_SECOND ","holiday is : "+holiday);
     }
 
 
-
     private String getCurrentFinancialYear() {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
-       // Log.d("Year","Current6 year" +year + ""+month);
+        // Log.d("Year","Current6 year" +year + ""+month);
 
-        year=year-2;
+        year = year - 2;
         int startYear, endYear;
         if (month >= Calendar.APRIL) {
             startYear = year;
             endYear = year + 1;
-           // Log.d("startyear","start year is in if : "+startYear+" "+endYear);
+            // Log.d("startyear","start year is in if : "+startYear+" "+endYear);
         } else {
             startYear = year - 1;
             endYear = year;
-           // Log.d("startyear","start year is in else : "+startYear+" "+endYear);
+            // Log.d("startyear","start year is in else : "+startYear+" "+endYear);
 
         }
         return startYear + "_" + String.valueOf(endYear).substring(2);
@@ -275,8 +282,7 @@ Log.d("HOLIDAYSIN_SECOND ","holiday is : "+holiday);
     }
 
 
-
-        public void calculateGrowthResult() {
+    public void calculateGrowthResult() {
         String growthText = edtGrowth.getText().toString().trim();
         String secondTurnoverText = SecondTurnOver.getText().toString().trim();
 
@@ -285,7 +291,7 @@ Log.d("HOLIDAYSIN_SECOND ","holiday is : "+holiday);
                 float growthPercent = Float.parseFloat(growthText);
                 int secondTurnover = Integer.parseInt(secondTurnoverText);
 
-                Float result = ((growthPercent / 100f) * secondTurnover)+secondTurnover;
+                Float result = ((growthPercent / 100f) * secondTurnover) + secondTurnover;
 
                 txtGrowthShow.setText(String.valueOf(Math.round(result)));
             } catch (NumberFormatException e) {
@@ -295,7 +301,6 @@ Log.d("HOLIDAYSIN_SECOND ","holiday is : "+holiday);
             txtGrowthShow.setText("0");
         }
     }
-
 
 
 }

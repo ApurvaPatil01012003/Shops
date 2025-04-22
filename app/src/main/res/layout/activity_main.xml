@@ -12,11 +12,28 @@ android:padding="24dp">
     android:id="@+id/ivLogo"
     android:layout_width="200dp"
     android:layout_height="120dp"
-    android:src="@drawable/asset_33"
+    android:src="@drawable/mybiztracker"
     android:layout_gravity="center_horizontal"
     android:contentDescription="App Logo"
     android:layout_marginTop="16dp"
     android:layout_marginBottom="8dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="5dp"
+        android:textAlignment="center"
+        android:text="डेली दर्शन"
+        android:textColor="#003366"
+        android:textSize="32sp"
+        android:textStyle="bold" /> <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="20dp"
+        android:textAlignment="center"
+        android:text="बिजनेस की ग्रोथ के लिए"
+        android:textColor="#003366"
+        android:textSize="20sp"
+        android:textStyle="bold" />
 
 <androidx.cardview.widget.CardView
     android:layout_width="match_parent"

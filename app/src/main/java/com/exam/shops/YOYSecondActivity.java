@@ -36,8 +36,6 @@ public class YOYSecondActivity extends AppCompatActivity {
     private float monthlyTarget = 0f;
 
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -163,44 +161,19 @@ public class YOYSecondActivity extends AppCompatActivity {
                 intent.putExtra("NOB", nob);
                 intent.putExtra("HighPerDay", High_Per_Day);
                 intent.putExtra("Growth", Growth_Per);
+              //  startActivityForResult(intent, 102);
+                 startActivityForResult(intent, 101);
+                ClearAllText();
 
 //                Log.d("Updated_Daily", "Updated for daily: " + updatedValueDaily);
 //                Log.d("Updated_Daily", "quantity for daily: " + quantity);
 //                Log.d("Updated_Daily", "nob for daily: " + nob);
                 // startActivity(intent);
-                startActivityForResult(intent, 101);
-                ClearAllText();
+
+
 
             }
         });
-
-
-//        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
-//            @Override
-//            public void handleOnBackPressed() {
-//                Intent intent = new Intent(YOYSecondActivity.this, GoToMAndD.class);
-//                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-//
-////                if (key != null && !key.isEmpty()) {
-////                    intent.putExtra("data_key", key);
-////                    intent.putExtra("data_value", updatedValue);
-////
-////                }
-//                if (key != null && !key.isEmpty()) {
-//                    intent.putExtra("data_key", key);
-//                    intent.putExtra("data_value", updatedValue);
-//                }
-//
-//// Always send the monthly data
-//                intent.putExtra("MonthlyAchieved", monthlyAchieved);
-//                intent.putExtra("MonthlyAchievedPercent", monthlyPercent);
-//
-//
-//
-//                startActivity(intent);
-//                finish();
-//            }
-//        });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -222,13 +195,13 @@ public class YOYSecondActivity extends AppCompatActivity {
 
                 setResult(RESULT_OK);
 
-               // startActivity(intent);
+                // startActivity(intent);
                 finish();
             }
         });
     }
 
-        public void ClearAllText() {
+    public void ClearAllText() {
         et_date.setText("");
         edtAchieved.setText("");
         edtQty.setText("");
@@ -311,8 +284,7 @@ public class YOYSecondActivity extends AppCompatActivity {
         this.updatedValueDaily = updatedValueDaily;
 
 
-
-    //chage the Achived and percentage in cardview of GotoActivity
+        //chage the Achived and percentage in cardview of GotoActivity
         String todayStr = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(System.currentTimeMillis());
         if (formattedDate.equals(todayStr)) {
             SharedPreferences todayPref = getSharedPreferences("TodayData", MODE_PRIVATE);
@@ -337,37 +309,6 @@ public class YOYSecondActivity extends AppCompatActivity {
 
 
     }
-//   public void SaveDailyDataToSharedPref(String dateInput, int Achieved, int Quantity, int nob) {
-//       SharedPreferences sharedPreferences = getSharedPreferences("YOY_PREFS", MODE_PRIVATE); // <- Fixed
-//       SharedPreferences.Editor editor = sharedPreferences.edit();
-//
-//       SimpleDateFormat inputFormat = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
-//       SimpleDateFormat saveFormat = new SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH);
-//
-//       String formattedDate = "";
-//       try {
-//           formattedDate = saveFormat.format(inputFormat.parse(dateInput));
-//       } catch (Exception e) {
-//           e.printStackTrace();
-//       }
-//
-//       // Extract day, month, year
-//       String[] dateParts = formattedDate.split("-");
-//       String day = dateParts[0];
-//       String month = dateParts[1];
-//       String year = dateParts[2];
-//
-//       String key = "day_" + day + "_" + month + "_" + year + "_Achieved";
-//       int prev = sharedPreferences.getInt(key, 0);
-//       updatedValueDaily = prev + Achieved;
-//
-//       editor.putInt(key, updatedValueDaily);
-//       editor.putString("last_selected_date", formattedDate);
-//       editor.apply();
-//
-//       Log.d("YOY_DATA_FIXED", key + " = " + updatedValueDaily);
-//   }
-
 
     private String convertToShortMonth(String fullMonth) {
         switch (fullMonth) {
@@ -401,24 +342,32 @@ public class YOYSecondActivity extends AppCompatActivity {
 
 
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 101 && resultCode == RESULT_OK && data != null) {
-            monthlyAchieved = data.getFloatExtra("MonthlyAchieved", 0f);
-            monthlyPercent = data.getFloatExtra("MonthlyAchievedPercent", 0f);
+        if (resultCode == RESULT_OK && data != null) {
+            if (requestCode == 101) {
+                monthlyAchieved = data.getFloatExtra("MonthlyAchieved", 0f);
+                monthlyPercent = data.getFloatExtra("MonthlyAchievedPercent", 0f);
 
-            // Assume 12 months in year
-            monthlyTarget = getIntent().getIntExtra("ResultTurnYear", 0) / 12f;
+                monthlyTarget = getIntent().getIntExtra("ResultTurnYear", 0) / 12f;
 
-            Toast.makeText(this,
-                    "Month Total: ₹" + monthlyAchieved +
-                            "\nAchieved: " + String.format("%.2f", monthlyPercent) + "%",
-                    Toast.LENGTH_LONG
-            ).show();
+                Toast.makeText(this,
+                        "Month Total: ₹" + monthlyAchieved +
+                                "\nAchieved: " + String.format("%.2f", monthlyPercent) + "%",
+                        Toast.LENGTH_LONG
+                ).show();
+            }
+
+            data.putExtra("data_updated", true);
+            setResult(RESULT_OK, data);
+            finish();
         }
     }
+
+
 
 
 

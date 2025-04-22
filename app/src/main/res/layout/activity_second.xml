@@ -21,8 +21,19 @@
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"
             android:contentDescription="App Logo"
-            android:src="@drawable/asset_33" />
+            android:src="@drawable/mybiztracker" />
 
+
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:textAlignment="center"
+            android:text="बिजनेस बढाने का रोडमॅप \n Past, Present, Future "
+            android:textColor="#003366"
+            android:textSize="20sp"
+            android:textStyle="bold" />
         <!-- Card -->
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"

@@ -13,7 +13,7 @@
         android:id="@+id/ivLogo"
         android:layout_width="200dp"
         android:layout_height="120dp"
-        android:src="@drawable/asset_33"
+        android:src="@drawable/mybiztracker"
         android:layout_gravity="center_horizontal"
         android:contentDescription="App Logo"
         android:layout_marginTop="16dp"

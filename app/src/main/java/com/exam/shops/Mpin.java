@@ -71,7 +71,8 @@ public class Mpin extends AppCompatActivity {
 
                 Log.d("Mpin","Mpin is : "+pin);
                 Log.d("Mpin","confirmPin is : "+confirmPin);
-                    Intent intent = new Intent(Mpin.this, SecondActivity.class);
+                   // Intent intent = new Intent(Mpin.this, SecondActivity.class);
+                Intent intent = new Intent(Mpin.this, Holi_High_Day.class);
                     intent.putExtra("shop_name", Name);
                     startActivity(intent);
 

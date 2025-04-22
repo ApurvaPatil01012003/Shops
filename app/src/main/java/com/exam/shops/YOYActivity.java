@@ -29,9 +29,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class YOYActivity extends AppCompatActivity {
 
@@ -45,6 +48,8 @@ public class YOYActivity extends AppCompatActivity {
             "April", "May", "June", "July", "August", "September",
             "October", "November", "December", "January", "February", "March"
     );
+    Map<String, Float> monthTargetMap = new HashMap<>();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +81,7 @@ public class YOYActivity extends AppCompatActivity {
         Log.d("TotalAchieved", "Total Achieved is: " + total);
         Log.d("TotalPercent", "Total Achieved %: " + percentOfYear);
 
-// Optional: Save to SharedPreferences (only if used later)
+
         SharedPreferences sharedPrefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         sharedPrefs.edit()
                 .putInt("TotalAchievedValue", total)
@@ -93,6 +98,7 @@ public class YOYActivity extends AppCompatActivity {
                 intent.putExtra("TotalAchived", total);
                 intent.putExtra("TotalAchPer", percentOfYear);
                 startActivity(intent);
+                finishAffinity();
             }
         });
 
@@ -105,6 +111,7 @@ public class YOYActivity extends AppCompatActivity {
 
 
     private void addMonthRows() {
+
         SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
         String[] parts = financialYear.split("_");
         int fyStartYear = Integer.parseInt(parts[0]);
@@ -172,6 +179,7 @@ public class YOYActivity extends AppCompatActivity {
                 showSingleEditDialog(tvTarget, tvAchieved, tvPercentage, shortMonth, false);
             });
 
+            monthTargetMap.put(shortMonth + "_" + dataYear, expected);
 
         }
 
@@ -261,11 +269,7 @@ public class YOYActivity extends AppCompatActivity {
 
         builder.setPositiveButton("Save", (dialog, which) -> {
             String newValue = input.getText().toString().trim();
-            if (isTargetEdit) {
-                tvTarget.setText("Target: ₹" + newValue);
-            } else {
-                tvAchieved.setText("Achieved: ₹" + newValue);
-            }
+            float newValueFloat = parseFloat(newValue);
 
             SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
@@ -276,17 +280,44 @@ public class YOYActivity extends AppCompatActivity {
                     ? fyStartYear + 1 : fyStartYear;
 
             if (isTargetEdit) {
-                editor.putFloat("expected_" + shortMonth + "_" + dataYear, parseFloat(newValue));
-            } else {
-                editor.putInt("data_" + shortMonth + "_" + dataYear + "_Achieved", (int) parseFloat(newValue));
+                float oldValue = parseFloat(tvTarget.getText().toString());
+                float diff = newValueFloat - oldValue;
+
+                Log.d("TARGET_CHANGE", "Old: " + oldValue + " New: " + newValueFloat + " Diff: " + diff);
+
+
+                editor.putFloat("expected_" + shortMonth + "_" + dataYear, newValueFloat);
+                editor.apply();
+
+                String monthKey = shortMonth + "_" + dataYear;
+                monthTargetMap.put(monthKey, newValueFloat);
+
+
+                if (diff != 0) {
+                    redistributeDifference(shortMonth, dataYear, diff);
+                }
+
+                // Refresh whole UI after all updates (including edited month)
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                    monthTargetMap.clear();
+                    tableLayout.removeAllViews();
+                    addMonthRows();
+                }, 100); // small delay ensures sharedPrefs saved
+            }
+            else {
+                tvAchieved.setText("Achieved: ₹" + newValue);
+                editor.putInt("data_" + shortMonth + "_" + dataYear + "_Achieved", (int) newValueFloat);
             }
 
+           // editor.apply();
+
+            editor.putFloat("expected_" + shortMonth + "_" + dataYear, newValueFloat);
             editor.apply();
 
-            // Update percentage
             updatePercentage(tvTarget, tvAchieved, tvPercentage, shortMonth, prefs);
             addTextWatcher(tvTarget, tvAchieved, tvPercentage, shortMonth);
         });
+
 
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
@@ -364,6 +395,7 @@ public class YOYActivity extends AppCompatActivity {
         achievedView.addTextChangedListener(watcher);
     }
 
+
     private float parseFloat(String value) {
         try {
             return Float.parseFloat(value.replaceAll("[^\\d.]", "").trim());
@@ -371,6 +403,7 @@ public class YOYActivity extends AppCompatActivity {
             return 0;
         }
     }
+
 
     private String parseNumericOnly(String value) {
         return value.replaceAll("[^\\d.]", "");
@@ -452,6 +485,59 @@ public class YOYActivity extends AppCompatActivity {
         return row;
     }
 
+    private void redistributeDifference(String editedMonth, int editedYear, float diff) {
+        List<String> remainingMonths = getRemainingMonths(editedMonth);
+
+        if (remainingMonths.isEmpty()) return;
+
+        float splitAmount = diff / remainingMonths.size();
+
+        SharedPreferences.Editor editor = getSharedPreferences("YOY_PREFS", MODE_PRIVATE).edit();
+
+        for (String month : remainingMonths) {
+
+            int targetYear = (month.equals("Jan") || month.equals("Feb") || month.equals("Mar"))
+                    ? Integer.parseInt(financialYear.split("_")[0]) + 1
+                    : Integer.parseInt(financialYear.split("_")[0]);
+
+
+            String key = "expected_" + month + "_" + targetYear;
+            String mapKey = month + "_" + targetYear;
+
+            float oldValue = monthTargetMap.getOrDefault(mapKey, Result / 12f);
+            float newValue = oldValue - splitAmount;
+            if (newValue < 0) newValue = 0;
+
+            editor.putFloat(key, newValue);
+            monthTargetMap.put(mapKey, newValue);
+
+            Log.d("REDIST_TARGET", key + " updated to " + newValue);
+        }
+
+        editor.apply();
+
+        // Refresh UI
+        monthTargetMap.clear();
+        tableLayout.removeAllViews();
+        addMonthRows();
+    }
+
+    private List<String> getRemainingMonths(String currentShortMonth) {
+        List<String> orderedMonths = Arrays.asList(
+                "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"
+        );
+
+        List<String> result = new ArrayList<>();
+        boolean startCollecting = false;
+
+        for (String month : orderedMonths) {
+            if (startCollecting) result.add(month);
+            if (month.equals(currentShortMonth)) startCollecting = true;
+        }
+
+        return result;
+    }
 
 
 }

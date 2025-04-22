@@ -18,7 +18,7 @@
             android:id="@+id/ivLogo"
             android:layout_width="200dp"
             android:layout_height="120dp"
-            android:src="@drawable/asset_33"
+            android:src="@drawable/mybiztracker"
             android:layout_gravity="center_horizontal"
             android:layout_marginBottom="16dp"
             android:contentDescription="App Logo" />
@@ -80,7 +80,7 @@
                     android:id="@+id/btnNextSchedule"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Plan your monthly work schedule"
+                    android:text="Next"
                     android:textAllCaps="true"
                     android:layout_marginTop="24dp"
                     android:backgroundTint="#007BFF"

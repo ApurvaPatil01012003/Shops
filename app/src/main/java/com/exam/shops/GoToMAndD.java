@@ -49,14 +49,11 @@ import java.util.Locale;
 public class GoToMAndD extends AppCompatActivity {
     Button btnyes, btnDyes;
 
- //   CardView cardviewDaily;
-    //txtDate, txtDay, txtExpect, txtAchived, txtAchievedPer, txtType,
-    TextView  txtShopName,txtYearTarget,txtYearlyAch,YearlyAchPer,txtMonthTarget,MonthlyAch,MonthlyAchPer,txtTargetRecentdays,txtAchievedRecentdays,txtAchievedPerRecentdays;
+    TextView txtShopName, txtYearTarget, txtYearlyAch, YearlyAchPer, txtMonthTarget, MonthlyAch, MonthlyAchPer, txtTargetRecentdays, txtAchievedRecentdays, txtAchievedPerRecentdays;
     Spinner spinnerSR;
-//    BarChart barChart;
-//    PieChart pieChart;
-int Result;
-    LineChart lineChart;
+
+    int Result;
+    LineChart lineChart,lineChartATV,lineChartASP;
 
 
     @Override
@@ -94,7 +91,11 @@ int Result;
         txtAchievedRecentdays = findViewById(R.id.txtAchievedRecentdays);
         txtAchievedPerRecentdays = findViewById(R.id.txtAchievedPerRecentdays);
         lineChart = findViewById(R.id.lineChart);
-        drawLineChart(7);
+        drawLineChartABS(7);
+        lineChartATV = findViewById(R.id.lineChartATV);
+        drawLineChartATV(7);
+        lineChartASP = findViewById(R.id.lineChartASP);
+        drawLineChartASP(7);
 
 
         ArrayAdapter<String> SR = new ArrayAdapter<>(
@@ -111,10 +112,14 @@ int Result;
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 1) {
                     updateRecentDaysData(15);
-                    drawLineChart(15);
+                    drawLineChartABS(15);
+                    drawLineChartATV(15);
+                    drawLineChartASP(15);
                 } else if (position == 2) {
                     updateRecentDaysData(7);
-                    drawLineChart(7);
+                    drawLineChartABS(7);
+                    drawLineChartATV(7);
+                    drawLineChartASP(7);
                 }
             }
 
@@ -125,6 +130,7 @@ int Result;
 
 
         String shopname = getIntent().getStringExtra("ShopName");
+
 
         int yearlyAchieved = getIntent().getIntExtra("YearlyAchieved", -1);
         if (yearlyAchieved == -1) {
@@ -230,9 +236,13 @@ int Result;
         });
 
     }
+
     @Override
     protected void onResume() {
         super.onResume();
+
+
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
 
         updateYearlyAchievedDisplay();
         updateCurrentMonthAchieved();
@@ -256,6 +266,7 @@ int Result;
 
         return totalAchievedYearly;
     }
+
     private void updateYearlyAchievedDisplay() {
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         int yearlyAchieved = getTotalAchievedForYear(currentYear);
@@ -281,7 +292,6 @@ int Result;
     }
 
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -289,6 +299,14 @@ int Result;
         if (requestCode == 101 && resultCode == RESULT_OK) {
             updateYearlyAchievedDisplay();
             Log.d("GoToMAndD", "Returned from YOYSecondActivity - Yearly Achieved Updated");
+        }
+        if (requestCode == 101 && resultCode == RESULT_OK) {
+            if (data != null && data.getBooleanExtra("data_updated", false)) {
+                updateRecentDaysData(7);
+                updateRecentDaysData(15);
+                updateTodaysMetricsFromPrefs();
+                Log.d("GoToMAndD", "Data updated from DailyTableYOY → via YOYSecondActivity");
+            }
         }
     }
 
@@ -301,77 +319,39 @@ int Result;
         String currentMonth = monthNames[monthIndex];
 
         SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
-        String key = "data_" + currentMonth + "_" + year + "_Achieved";
-        int achieved = prefs.getInt(key, 0); // total achieved for current month
+        int dataYear = (currentMonth.equals("Jan") || currentMonth.equals("Feb") || currentMonth.equals("Mar"))
+                ? year + 1 : year;
 
-        // Calculate monthly target
-        if (Result == 0) {
-            SharedPreferences shopPrefs = getSharedPreferences("ShopData", MODE_PRIVATE);
-            Result = shopPrefs.getInt("Result_TURNOVER", 0);
-        }
+        String key = "data_" + currentMonth + "_" + dataYear + "_Achieved";
+        int achieved = prefs.getInt(key, 0);
 
-        int monthlyTarget = Result / 12;
+        float monthlyTarget = prefs.getFloat("expected_" + currentMonth + "_" + dataYear, Result / 12f);
         float percent = (monthlyTarget > 0) ? (achieved * 100f / monthlyTarget) : 0f;
 
-
-
         MonthlyAch.setText("₹ " + achieved);
-        txtMonthTarget.setText("₹ " + monthlyTarget);
+        txtMonthTarget.setText("₹ " + String.format("%.0f", monthlyTarget));
         MonthlyAchPer.setText(String.format(Locale.US, "%.2f ", percent) + "%");
 
-        Log.d("MonthlyAch", "Month: " + currentMonth + " | Achieved: ₹" + achieved + " | Percent: " + percent);
+        Log.d("MonthlyAch", "Month: " + currentMonth + " | Target: ₹" + monthlyTarget + " | Achieved: ₹" + achieved + " | Percent: " + percent);
     }
 
     private void updateRecentDaysData(int daysBack) {
-        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE); // this is where your daily data is
-        SharedPreferences shopPrefs = getSharedPreferences("ShopData", MODE_PRIVATE); // config
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
 
-        // Get configuration
-        String holiday = shopPrefs.getString("Shop_Holiday", "Sunday");
-        String highDays = shopPrefs.getString("selected_days", "");
-        int growth = shopPrefs.getInt("Growth", 0);
-        int turnover = shopPrefs.getInt("Result_TURNOVER", 0);
-
-        List<String> highPerformDays = new ArrayList<>();
-        if (!highDays.isEmpty()) {
-            for (String d : highDays.split(",")) {
-                highPerformDays.add(d.trim());
-            }
-        }
-
-        int monthlyTarget = turnover / 12;
-        float baseDailyTarget = monthlyTarget / 30f;
-        float highDayTarget = baseDailyTarget * (1 + (growth / 100f));
-
-        float expectedTotal = 0f;
+        float expectedTotal = getExpectedSumForPastDays(daysBack);
         int achievedTotal = 0;
 
-        SimpleDateFormat dayFormat = new SimpleDateFormat("EEEE", Locale.getDefault());
         SimpleDateFormat keyFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
-
         Calendar cal = Calendar.getInstance();
 
         for (int i = 1; i <= daysBack; i++) {
-            cal.add(Calendar.DAY_OF_MONTH, -1); // go back one day at a time
-
+            cal.add(Calendar.DAY_OF_MONTH, -1);
             String dateStr = keyFormat.format(cal.getTime());
-            String dayName = dayFormat.format(cal.getTime());
-
-            // Decide the target
-            float target;
-            if (dayName.equalsIgnoreCase(holiday)) {
-                target = 0;
-            } else if (highPerformDays.contains(dayName)) {
-                target = highDayTarget;
-            } else {
-                target = baseDailyTarget;
-            }
 
             int achieved = prefs.getInt("Achieved_" + dateStr, 0);
-            expectedTotal += target;
             achievedTotal += achieved;
 
-            Log.d("DAYS_LOOP", dateStr + " | Target=" + target + " | Achieved=" + achieved);
+            Log.d("DAYS_LOOP", dateStr + " | Achieved = ₹" + achieved);
         }
 
         float percent = (expectedTotal > 0) ? (achievedTotal * 100f / expectedTotal) : 0f;
@@ -385,15 +365,14 @@ int Result;
     }
 
 
-    private void drawLineChart(int daysBack) {
+
+    private void drawLineChartABS(int daysBack) {
         LineChart lineChart = findViewById(R.id.lineChart);
         lineChart.clear();
 
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
 
         List<Entry> absEntries = new ArrayList<>();
-        List<Entry> atvEntries = new ArrayList<>();
-        List<Entry> aspEntries = new ArrayList<>();
         List<String> xLabels = new ArrayList<>();
 
         Calendar calendar = Calendar.getInstance();
@@ -412,28 +391,17 @@ int Result;
             int nob = prefs.getInt("NOB_" + dateKey, 0);
 
             int abs = (nob != 0) ? qty / nob : 0;
-            float atv = (nob != 0) ? (float) achieved / nob : 0;
-            float asp = (qty != 0) ? (float) achieved / qty : 0;
 
             absEntries.add(new Entry(daysBack - i, abs));
-            atvEntries.add(new Entry(daysBack - i, atv));
-            aspEntries.add(new Entry(daysBack - i, asp));
+
         }
 
         LineDataSet absSet = new LineDataSet(absEntries, "ABS");
         absSet.setColor(Color.RED);
         absSet.setCircleColor(Color.RED);
 
-        LineDataSet atvSet = new LineDataSet(atvEntries, "ATV");
-        atvSet.setColor(Color.BLUE);
-        atvSet.setCircleColor(Color.BLUE);
-        atvSet.setLineWidth(2f);
 
-        LineDataSet aspSet = new LineDataSet(aspEntries, "ASP");
-        aspSet.setColor(Color.GREEN);
-        aspSet.setCircleColor(Color.GREEN);
-
-        LineData lineData = new LineData(absSet, atvSet, aspSet);
+        LineData lineData = new LineData(absSet);
         lineChart.setData(lineData);
 
         // X axis labels
@@ -449,6 +417,118 @@ int Result;
     }
 
 
+
+    private void drawLineChartATV(int daysBack) {
+        LineChart lineChartATV = findViewById(R.id.lineChartATV);
+        lineChartATV.clear();
+
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+
+        List<Entry> atvEntries = new ArrayList<>();
+        List<String> xLabels = new ArrayList<>();
+
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM", Locale.US);
+
+        for (int i = daysBack; i >= 1; i--) {
+            calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_MONTH, -i);
+
+            String dateKey = new SimpleDateFormat("dd-MM-yyyy", Locale.US).format(calendar.getTime());
+            String label = dateFormat.format(calendar.getTime());
+            xLabels.add(label);
+
+            int achieved = prefs.getInt("Achieved_" + dateKey, 0);
+            int qty = prefs.getInt("Quantity_" + dateKey, 0);
+            int nob = prefs.getInt("NOB_" + dateKey, 0);
+
+
+            float atv = (nob != 0) ? (float) achieved / nob : 0;
+
+
+
+            atvEntries.add(new Entry(daysBack - i, atv));
+
+        }
+
+
+
+        LineDataSet atvSet = new LineDataSet(atvEntries, "ATV");
+        atvSet.setColor(Color.BLUE);
+        atvSet.setCircleColor(Color.BLUE);
+        atvSet.setLineWidth(2f);
+
+
+
+        LineData lineData = new LineData(atvSet);
+        lineChartATV.setData(lineData);
+
+        // X axis labels
+        XAxis xAxis = lineChartATV.getXAxis();
+        xAxis.setGranularity(1f);
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(xLabels));
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+
+        lineChartATV.getAxisRight().setEnabled(false);
+        lineChartATV.getDescription().setEnabled(false);
+        lineChartATV.animateY(500);
+        lineChartATV.invalidate();
+    }
+
+
+
+    private void drawLineChartASP(int daysBack) {
+        LineChart lineChartASP = findViewById(R.id.lineChartASP);
+        lineChartASP.clear();
+
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+
+        List<Entry> aspEntries = new ArrayList<>();
+        List<String> xLabels = new ArrayList<>();
+
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM", Locale.US);
+
+        for (int i = daysBack; i >= 1; i--) {
+            calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_MONTH, -i);
+
+            String dateKey = new SimpleDateFormat("dd-MM-yyyy", Locale.US).format(calendar.getTime());
+            String label = dateFormat.format(calendar.getTime());
+            xLabels.add(label);
+
+            int achieved = prefs.getInt("Achieved_" + dateKey, 0);
+            int qty = prefs.getInt("Quantity_" + dateKey, 0);
+            int nob = prefs.getInt("NOB_" + dateKey, 0);
+
+
+            float asp = (qty != 0) ? (float) achieved / qty : 0;
+
+
+            aspEntries.add(new Entry(daysBack - i, asp));
+        }
+
+
+
+        LineDataSet aspSet = new LineDataSet(aspEntries, "ASP");
+        aspSet.setColor(Color.GREEN);
+        aspSet.setCircleColor(Color.GREEN);
+        LineData lineData = new LineData(aspSet);
+        lineChartASP.setData(lineData);
+
+        // X axis labels
+        XAxis xAxis = lineChartASP.getXAxis();
+        xAxis.setGranularity(1f);
+        xAxis.setValueFormatter(new IndexAxisValueFormatter(xLabels));
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+
+        lineChartASP.getAxisRight().setEnabled(false);
+        lineChartASP.getDescription().setEnabled(false);
+        lineChartASP.animateY(500);
+        lineChartASP.invalidate();
+    }
+
+
     private void updateTodaysMetricsFromPrefs() {
         SharedPreferences todayPrefs = getSharedPreferences("TodayData", MODE_PRIVATE);
 
@@ -456,9 +536,32 @@ int Result;
         float atv = todayPrefs.getFloat("today_atv", 0f);
         float asp = todayPrefs.getFloat("today_asp", 0f);
 
-        Log.d("GoToActivity", "ABS: " + abs + " | ATV: " + atv + " | ASP: " + asp);
 
-       ;
+        Log.d("GoToActivity", "ABS: " + abs + " | ATV: " + atv + " | ASP: " + asp);
+    }
+
+
+    private float getExpectedSumForPastDays(int daysBack) {
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        SimpleDateFormat keyFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+        Calendar cal = Calendar.getInstance();
+
+        float total = 0f;
+
+        for (int i = 1; i <= daysBack; i++) {
+            cal.add(Calendar.DAY_OF_MONTH, -1);
+            String dateStr = keyFormat.format(cal.getTime());
+
+            float expected = prefs.getFloat("Expected_" + dateStr, -1f);
+            if (expected >= 0) {
+                total += expected;
+            }
+
+            Log.d("ExpectedSum", dateStr + " → ₹" + expected);
+        }
+
+        Log.d("ExpectedSum", daysBack + " days total: ₹" + total);
+        return total;
     }
 
 

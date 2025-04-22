@@ -1,4 +1,5 @@
 <resources>
-    <string name="app_name">Shops</string>
+    <string name="app_name">MBT - My Business Tracker</string>
     <string name="hello">Hello</string>
+    <string name="download_to_pdf">Download to PDF</string>
 </resources>

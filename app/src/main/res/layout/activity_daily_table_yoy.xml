@@ -49,7 +49,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20sp"
                 android:backgroundTint="#007BFF"
-                android:text="Convert to PDF"/>
+                android:text="@string/download_to_pdf"/>
         </LinearLayout>
 
 

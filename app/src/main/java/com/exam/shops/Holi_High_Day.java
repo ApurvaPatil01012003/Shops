@@ -22,9 +22,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class Holi_High_Day extends AppCompatActivity {
-EditText  edtHighPerDays;
-Spinner spinnerShopHoli;
-Button btnNextSchedule;
+    EditText edtHighPerDays;
+    Spinner spinnerShopHoli;
+    Button btnNextSchedule;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,7 +42,12 @@ Button btnNextSchedule;
         btnNextSchedule = findViewById(R.id.btnNextSchedule);
 
 
-        String Shopname=getIntent().getStringExtra("ShopName");
+        Intent receivedIntent = getIntent();
+        String Shopname = receivedIntent.getStringExtra("shop_name");
+//        int Result = receivedIntent.getIntExtra("ResultTurnover", -1);
+//        int SecondTurnOverValue = receivedIntent.getIntExtra("TurnOver", -1);
+//        int growth = receivedIntent.getIntExtra("EdtGrowth", -1);
+
 
         ArrayAdapter<String> shopholiday = new ArrayAdapter<>(
                 this,
@@ -82,10 +88,9 @@ Button btnNextSchedule;
         });
 
 
-        int Result=getIntent().getIntExtra("ResultTurnover",-1);
+        int Result = getIntent().getIntExtra("ResultTurnover", -1);
         int SecondTurnOverValue = getIntent().getIntExtra("TurnOver", -1);
         int growth = getIntent().getIntExtra("EdtGrowth", -1);
-
 
 
         btnNextSchedule.setOnClickListener(v -> {
@@ -93,35 +98,33 @@ Button btnNextSchedule;
             String HighPerformDays = edtHighPerDays.getText().toString().trim();
 
 
-           Intent intent = new Intent(Holi_High_Day.this,GoToMAndD.class);
-           // Intent intent = new Intent(Holi_High_Day.this,SecondActivity.class);
-            intent.putExtra("ShopName",Shopname);
-            intent.putExtra("TurnOver",SecondTurnOverValue);
+            Intent intent = new Intent(Holi_High_Day.this, SecondActivity.class);
+
+            intent.putExtra("shop_name", Shopname);
+            intent.putExtra("TurnOver", SecondTurnOverValue);
             intent.putExtra("shopsHoliday", shopHolidays);
             intent.putExtra("HighPerformace", HighPerformDays);
-            intent.putExtra("EdtGrowth",growth);
+            intent.putExtra("EdtGrowth", growth);
             intent.putExtra("ResultTurnover", Result);
             startActivity(intent);
 
-            SharedPreferences sharedPreferences = getSharedPreferences("ShopData", MODE_PRIVATE);
+            SharedPreferences sharedPreferences = getSharedPreferences("shop_data", MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putInt("TURNOVER", getIntent().getIntExtra("TurnOver", -1));
             editor.putInt("Growth", getIntent().getIntExtra("EdtGrowth", -1));
             editor.putString("Shop_Holiday", shopHolidays);
             editor.putString("selected_days", HighPerformDays);
-            editor.putString("ShopName",Shopname);
-            editor.putInt("ResultTurnover",Result);
+            editor.putString("ShopName", Shopname);
+            editor.putInt("ResultTurnover", Result);
             editor.apply();
 
-Log.d("ShopName","shop name issss : "+Shopname);
+            Log.d("ShopName", "shop name issss : " + Shopname);
             Log.d("Turnover", "Turnover is: " + getIntent().getIntExtra("TurnOver", -1));
             Log.d("Turnover", "Growth is: " + getIntent().getIntExtra("EdtGrowth", -1));
             Log.d("Turnover", "Holiday is: " + shopHolidays);
             Log.d("Turnover", "High per day is: " + HighPerformDays);
             Log.d("Turnover", "Result is: " + getIntent().getIntExtra("ResultTurnover", -1));
         });
-
-
 
 
     }
