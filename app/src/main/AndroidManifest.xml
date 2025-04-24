@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -15,6 +16,24 @@
         android:theme="@style/Theme.Shops"
         tools:targetApi="31">
         <activity
+            android:name=".FAQ"
+            android:exported="false" />
+        <activity
+            android:name=".ResetMpin"
+            android:exported="false" />
+        <activity
+            android:name=".SetHoliHighDay"
+            android:exported="false" />
+        <activity
+            android:name=".SetRevenueFigures"
+            android:exported="false" />
+        <activity
+            android:name=".Tutorial"
+            android:configChanges="orientation|screenSize"
+            android:exported="false"
+            android:hardwareAccelerated="true"
+            android:screenOrientation="sensor" />
+        <activity
             android:name=".MpinLogin"
             android:exported="false" />
         <activity
@@ -25,15 +44,13 @@
             android:exported="false" />
         <activity
             android:name=".DailyTableYOY"
-            android:exported="false"
-            />
+            android:exported="false" />
         <activity
             android:name=".GoToMAndD"
             android:exported="false" />
         <activity
             android:name=".YOYSecondActivity"
             android:exported="false" />
-
         <activity
             android:name=".YOYActivity"
             android:exported="false" />

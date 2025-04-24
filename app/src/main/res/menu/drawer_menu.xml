@@ -1,0 +1,36 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:title="Home" />
+    <item
+        android:id="@+id/nav_tutorial"
+        android:title="Tutorial" />
+    <item
+        android:id="@+id/Set_Rev_Fig"
+        android:title="Set Revenue Figures" />
+
+    <item
+        android:id="@+id/Holi_High_Day"
+        android:title="Set Holiday/Highperformace day" />
+    <item
+        android:id="@+id/Reset_Mpin"
+        android:title="Reset Mpin" />
+    <item
+        android:id="@+id/Faq"
+        android:title="Faq" />
+
+
+    <item
+        android:id="@+id/Terms_Condition"
+        android:title="Terms and Condition" />
+    <item
+        android:id="@+id/Privacy_Policy"
+        android:title="Privacy and Policy"/>
+    <item
+        android:id="@+id/Contact"
+        android:title="Contact" />
+
+
+
+
+</menu>

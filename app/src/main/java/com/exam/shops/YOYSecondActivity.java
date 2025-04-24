@@ -72,6 +72,8 @@ public class YOYSecondActivity extends AppCompatActivity {
         Log.d("HIGHPERFORM", "HIGH DAY" + High_Per_Day);
         Log.d("Growth", "groth is : " + Growth_Per);
 
+        float MonthTarget = getIntent().getFloatExtra("MonthlyTarget",0f);
+
         MaterialDatePicker<Long> datePicker = MaterialDatePicker.Builder.datePicker()
                 .setTitleText("Select Date")
                 .build();
@@ -161,6 +163,8 @@ public class YOYSecondActivity extends AppCompatActivity {
                 intent.putExtra("NOB", nob);
                 intent.putExtra("HighPerDay", High_Per_Day);
                 intent.putExtra("Growth", Growth_Per);
+                intent.putExtra("MonthlyTarget",MonthTarget);
+                Log.d("Monthly","MonthTarget is : "+MonthTarget);
               //  startActivityForResult(intent, 102);
                  startActivityForResult(intent, 101);
                 ClearAllText();

@@ -1,0 +1,50 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/white"
+    android:gravity="center_horizontal">
+
+
+    <TextView
+        android:id="@+id/faqTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="12dp"
+        android:gravity="center"/>
+
+    <!-- Language Selection with Hint -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="भाषा / Language:"
+        android:textSize="16sp"
+        android:textColor="#444"
+        android:layout_marginBottom="4dp"
+        android:layout_marginTop="8dp"/>
+
+    <!-- Spinner -->
+    <Spinner
+        android:id="@+id/languageSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:background="@drawable/spinner_background"
+        android:layout_marginBottom="12dp"/>
+
+    <!-- FAQ List -->
+    <ExpandableListView
+        android:id="@+id/faqListView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:dividerHeight="1dp"
+        android:groupIndicator="@null"
+        android:background="#f9f9f9"
+        android:padding="4dp"/>
+
+</LinearLayout>

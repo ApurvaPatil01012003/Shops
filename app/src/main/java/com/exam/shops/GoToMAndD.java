@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -14,11 +15,15 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 import androidx.core.graphics.Insets;
+import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
@@ -38,6 +43,7 @@ import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.formatter.ValueFormatter;
+import com.google.android.material.navigation.NavigationView;
 
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -45,16 +51,22 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public class GoToMAndD extends AppCompatActivity {
-    Button btnyes, btnDyes;
+    Button btnyes, btnDyes ;
 
     TextView txtShopName, txtYearTarget, txtYearlyAch, YearlyAchPer, txtMonthTarget, MonthlyAch, MonthlyAchPer, txtTargetRecentdays, txtAchievedRecentdays, txtAchievedPerRecentdays;
     Spinner spinnerSR;
 
-    int Result;
+    //int Result;
     LineChart lineChart,lineChartATV,lineChartASP;
+    float monthlyTarget;
+    int growth;
 
+    DrawerLayout drawerLayout;
+    NavigationView navigationView;
+    ActionBarDrawerToggle toggle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +108,16 @@ public class GoToMAndD extends AppCompatActivity {
         drawLineChartATV(7);
         lineChartASP = findViewById(R.id.lineChartASP);
         drawLineChartASP(7);
+        drawerLayout = findViewById(R.id.drawer_layout);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
+
+//        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+//        prefs.edit().putFloat("DefaultDailyTarget", growth / 30f).apply();
+//
+//
+//        InitializerRecentDays.cacheExpectedSums(this);
 
         ArrayAdapter<String> SR = new ArrayAdapter<>(
                 this,
@@ -105,6 +126,8 @@ public class GoToMAndD extends AppCompatActivity {
         SR.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerSR.setAdapter(SR);
         spinnerSR.setSelection(2);
+
+
 
 
         spinnerSR.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -139,21 +162,21 @@ public class GoToMAndD extends AppCompatActivity {
         }
         txtYearlyAch.setText(" " + yearlyAchieved);
 
-        Log.d("GOTOACTIVITY", "ShopName is : " + shopname);
+
 
 
         Intent intent = getIntent();
-        Result = intent.getIntExtra("ResultTurnover", -1);
+        //Result = intent.getIntExtra("ResultTurnover", -1);
         int SecondTurnOverValue = intent.getIntExtra("TurnOver", -1);
         String Holiday = intent.getStringExtra("shopsHoliday");
         String HighPerDay = intent.getStringExtra("HighPerformace");
-        int growth = intent.getIntExtra("EdtGrowth", -1);
+         growth = intent.getIntExtra("EdtGrowth", -1);
 
 
-        if (Result <= 0) {
-            SharedPreferences prefs = getSharedPreferences("ShopData", MODE_PRIVATE);
-            Result = prefs.getInt("Result_TURNOVER", 0);
-        }
+//        if (Result <= 0) {
+//            SharedPreferences prefs = getSharedPreferences("ShopData", MODE_PRIVATE);
+//            Result = prefs.getInt("Result_TURNOVER", 0);
+//        }
 
         updateYearlyAchievedDisplay();
         updateCurrentMonthAchieved();
@@ -162,10 +185,10 @@ public class GoToMAndD extends AppCompatActivity {
         updateTodaysMetricsFromPrefs();
 
 
-        SharedPreferences prefs = getSharedPreferences("ShopData", MODE_PRIVATE);
-        if (Result == -1) {
-            Result = prefs.getInt("Result_TURNOVER", 0);
-        }
+       SharedPreferences prefs = getSharedPreferences("ShopData", MODE_PRIVATE);
+//        if (Result == -1) {
+//            Result = prefs.getInt("Result_TURNOVER", 0);
+//        }
         if (SecondTurnOverValue == -1) {
             SecondTurnOverValue = prefs.getInt("TURNOVER", 0);
         }
@@ -183,10 +206,9 @@ public class GoToMAndD extends AppCompatActivity {
             shopname = prefs.getString("ShopName", "");
         }
 
-        txtShopName.setText(shopname);
-        txtYearTarget.setText(String.valueOf(Result));
-        int MonthlyTarget = Result / 12;
-        txtMonthTarget.setText(String.valueOf(MonthlyTarget));
+
+
+
 
 
 //        Log.d("GOTOACTIVITY", "ShopName is : " + shopname);
@@ -201,7 +223,7 @@ public class GoToMAndD extends AppCompatActivity {
 
 
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("Result_TURNOVER", Result);
+       // editor.putInt("Result_TURNOVER", Result);
         editor.putInt("TURNOVER", SecondTurnOverValue);
         editor.putString("Shop_Holiday", Holiday);
         editor.putString("selected_days", HighPerDay);
@@ -210,31 +232,108 @@ public class GoToMAndD extends AppCompatActivity {
         editor.apply();
 
 
+        SharedPreferences sharedPref = getSharedPreferences("shop_data", MODE_PRIVATE);
+        String name=sharedPref.getString("shop_name","");
+        //Result=sharedPref.getInt("result",0);
+        Holiday = sharedPref.getString("Shop_Holiday","");
+        HighPerDay = sharedPref.getString("selected_days","");
+        growth = sharedPref.getInt("editGrowth",0);
+
+        txtShopName.setText(name);
+        txtYearTarget.setText(String.valueOf(growth));
+        int MonthlyTarget = growth / 12;
+        txtMonthTarget.setText(String.valueOf(MonthlyTarget));
+        Log.d("GOTOMonthlyTarget","MonthlyTarget is : "+MonthlyTarget);
+
+
         int finalSecondTurnOverValue = SecondTurnOverValue;
-        int finalResult = Result;
+        //int finalResult = Result;
+
+        int finalGrowth1 = growth;
         btnyes.setOnClickListener(v -> {
+            SharedPreferences sharedprefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+            sharedprefs.edit().putInt("EdtGrowth", finalGrowth1).apply();
+
             Intent i = new Intent(GoToMAndD.this, YOYActivity.class);
-            i.putExtra("TurnYear", finalSecondTurnOverValue);
-            i.putExtra("ResultTurnYear", finalResult);
+            i.putExtra("EdtGrowth", finalGrowth1);
             startActivity(i);
         });
 
         String finalHoliday = Holiday;
         int finalSecondTurnOverValue1 = SecondTurnOverValue;
-        int finalResult1 = Result;
+        //int finalResult1 = Result;
         String finalHighPerDay = HighPerDay;
         int finalGrowth = growth;
         btnDyes.setOnClickListener(v -> {
             Intent i = new Intent(GoToMAndD.this, YOYSecondActivity.class);
             i.putExtra("ShopHoliday", finalHoliday);
             i.putExtra("TurnYear", finalSecondTurnOverValue1);
-            i.putExtra("ResultTurnYear", finalResult1);
+            //i.putExtra("ResultTurnYear", finalResult1);
             i.putExtra("HighPerformance", finalHighPerDay);
             i.putExtra("Growth", finalGrowth);
+            i.putExtra("MonthlyTarget",monthlyTarget);
+            // Log.d("Monthly","Monthly target is : "+monthlyTarget);
             startActivityForResult(i, 101);
             //startActivity(i);
         });
 
+
+
+
+
+        toggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open_drawer, R.string.close_drawer);
+        drawerLayout.addDrawerListener(toggle);
+        toggle.syncState();
+        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
+
+        navigationView = findViewById(R.id.nav_view);
+        if (navigationView != null) {
+            String finalShopname = shopname;
+            navigationView.setNavigationItemSelectedListener(item -> {
+                int id = item.getItemId();
+                if (id == R.id.nav_home) {
+                    // Handle home
+                } else if (id == R.id.nav_tutorial) {
+                    startActivity(new Intent(this, Tutorial.class));
+                }
+                else if(id == R.id.Set_Rev_Fig)
+                {
+                    Intent i = new Intent(GoToMAndD.this,SetRevenueFigures.class);
+                    i.putExtra("ShopName", name);
+                    startActivity(i);
+Log.d("ShopName","ShopName is : "+name);
+                }
+                else if(id == R.id.Holi_High_Day)
+                {
+                    Intent i = new Intent(GoToMAndD.this,SetHoliHighDay.class);
+                    startActivity(i);
+                }
+                else if(id == R.id.Reset_Mpin)
+                {
+                    Intent i = new Intent(GoToMAndD.this,ResetMpin.class);
+                    startActivity(i);
+                }
+                else if(id == R.id.Faq)
+                {
+                    Intent i = new Intent(GoToMAndD.this,FAQ.class);
+                    startActivity(i);
+                }
+                drawerLayout.closeDrawer(GravityCompat.START);
+                return true;
+            });
+        } else {
+            Log.e("GoToMAndD", "NavigationView not found!");
+        }
+
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (toggle.onOptionsItemSelected(item)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -242,8 +341,9 @@ public class GoToMAndD extends AppCompatActivity {
         super.onResume();
 
 
-        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
 
+        growth = getSharedPreferences("shop_data", MODE_PRIVATE).getInt("editGrowth", 0);
+        txtYearTarget.setText( String.valueOf(growth));
         updateYearlyAchievedDisplay();
         updateCurrentMonthAchieved();
         updateTodaysMetricsFromPrefs();
@@ -275,13 +375,13 @@ public class GoToMAndD extends AppCompatActivity {
         float percent = 0f;
 
 
-        if (Result == 0) {
+        if (growth == 0) {
             SharedPreferences prefs = getSharedPreferences("ShopData", MODE_PRIVATE);
-            Result = prefs.getInt("Result_TURNOVER", 0);
+            growth = prefs.getInt("Result_TURNOVER", 0);
         }
 
-        if (Result != 0) {
-            percent = ((float) yearlyAchieved / Result) * 100f;
+        if (growth != 0) {
+            percent = ((float) yearlyAchieved / growth) * 100f;
             YearlyAchPer.setText(String.format(Locale.US, "%.2f", percent) + "%");
         } else {
             YearlyAchPer.setText("N/A");
@@ -325,7 +425,7 @@ public class GoToMAndD extends AppCompatActivity {
         String key = "data_" + currentMonth + "_" + dataYear + "_Achieved";
         int achieved = prefs.getInt(key, 0);
 
-        float monthlyTarget = prefs.getFloat("expected_" + currentMonth + "_" + dataYear, Result / 12f);
+        monthlyTarget = prefs.getFloat("expected_" + currentMonth + "_" + dataYear, growth / 12f);
         float percent = (monthlyTarget > 0) ? (achieved * 100f / monthlyTarget) : 0f;
 
         MonthlyAch.setText("₹ " + achieved);
@@ -362,6 +462,17 @@ public class GoToMAndD extends AppCompatActivity {
 
         Log.d("RecentStats", daysBack + " Days → Target: ₹" + expectedTotal +
                 " | Achieved: ₹" + achievedTotal + " | %: " + percent);
+       // SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+//        float target7 = prefs.getFloat("Expected_Target_7_Days", -1f);
+//        float target15 = prefs.getFloat("Expected_Target_15_Days", -1f);
+//
+//        if (target7 < 0f || target15 < 0f) {
+//            InitializerRecentDays.cacheExpectedSums(this);
+//            target7 = prefs.getFloat("Expected_Target_7_Days", 0f);
+//            target15 = prefs.getFloat("Expected_Target_15_Days", 0f);
+//        }
+
+
     }
 
 

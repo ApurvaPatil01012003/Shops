@@ -28,7 +28,7 @@ public class SecondActivity extends AppCompatActivity {
 
     EditText FirstTurnOver, SecondTurnOver, edtGrowth;
 
-    TextView ShopName, txtGrowth, txtFirstTurnOver, txtSecondTurnOver, txtGrowthShow;
+    TextView ShopName, txtGrowth, txtFirstTurnOver, txtSecondTurnOver, txtGrowthShow,EGFY;
     Button btnSave;
 
     @Override
@@ -49,10 +49,13 @@ public class SecondActivity extends AppCompatActivity {
         txtGrowth = findViewById(R.id.txtGrowth);
         btnSave = findViewById(R.id.btnSave);
         txtFirstTurnOver = findViewById(R.id.txtFirstTurnOver);
-        txtFirstTurnOver.setText(getCurrentFinancialYear() + " TurnOver");
+        txtFirstTurnOver.setText(getSecondLastFinancialYear() + " TurnOver");
         txtSecondTurnOver = findViewById(R.id.txtSecondTurnOver);
-        txtSecondTurnOver.setText(getCurrentFinancialYears() + " TurnOver");
+        txtSecondTurnOver.setText(getLastFinancialYear() + " TurnOver");
+        EGFY = findViewById(R.id.EGFY);
+        EGFY.setText("Expected Growth FY"+ getCurrentFinancialYear()+"(%)");
         txtGrowthShow = findViewById(R.id.txtGrowthShow);
+
 
         Intent receivedIntent = getIntent();
         String shopName = receivedIntent.getStringExtra("shop_name");
@@ -64,73 +67,117 @@ public class SecondActivity extends AppCompatActivity {
         Log.d("INTENT_DEBUG", "Sending holiday: " + holiday);
         Log.d("INTENT_DEBUG", "Sending highPerform: " + highPerformDay);
 
+//        btnSave.setOnClickListener(v -> {
+//            String name = ShopName.getText().toString().trim();
+//
+//            String fturnover = FirstTurnOver.getText().toString().trim();
+//            String sturnover = SecondTurnOver.getText().toString().trim();
+//            String EditGrowth = edtGrowth.getText().toString().trim();
+//            String GrowthShow = txtGrowthShow.getText().toString().trim();
+//
+//            if (fturnover.isEmpty() || sturnover.isEmpty()) {
+//                Toast.makeText(this, "Enter both turnover values", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//
+//            int firstTurnOver = Integer.parseInt(fturnover);
+//            int secondTurnOver = Integer.parseInt(sturnover);
+//            int EDTGrowth = Integer.parseInt(EditGrowth);
+//            int Result = Integer.parseInt(GrowthShow);
+//
+//
+//            String growth_per = txtGrowth.getText().toString().trim();
+//            int growths;
+//            try {
+//                String cleanGrowth = growth_per.replace("%", "").trim();
+//                float growthFloat = Float.parseFloat(cleanGrowth);
+//                growths = Math.round(growthFloat);
+//            } catch (NumberFormatException e) {
+//                e.printStackTrace();
+//                Toast.makeText(this, "Invalid growth percentage", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//
+//
+//            if (!name.isEmpty() && !growth_per.isEmpty()) {
+//                saveDataToSharedPref(name, holiday, highPerformDay, firstTurnOver, secondTurnOver, growths, EDTGrowth, Result);
+//                Toast.makeText(this, "Data Saved!", Toast.LENGTH_SHORT).show();
+//                //Intent intent = new Intent(SecondActivity.this, GoToMAndD.class);
+//                Intent intent = new Intent(SecondActivity.this,YOYActivity.class);
+//                intent.putExtra("ResultTurnover", Result);
+//                intent.putExtra("TurnOver", secondTurnOver);
+//                intent.putExtra("ShopName", name);
+//                intent.putExtra("shopsHoliday", holiday);
+//                intent.putExtra("HighPerformace", highPerformDay);
+//                intent.putExtra("EdtGrowth", EDTGrowth);
+//                startActivity(intent);
+//                finish();
+//
+//                Log.d("HighPerformace", "HighPerformDays is : " + EDTGrowth);
+//            } else {
+//                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+//            }
+//            getCurrentFinancialYear();
+//
+//            String editGrowthStr = edtGrowth.getText().toString().trim();
+//            String growthShowStr = txtGrowthShow.getText().toString().trim();
+//
+//            if (TextUtils.isEmpty(editGrowthStr) || TextUtils.isEmpty(growthShowStr)) {
+//                Toast.makeText(this, "Please enter growth values", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//
+//            EDTGrowth = Integer.parseInt(editGrowthStr);
+//            Result = Integer.parseInt(growthShowStr);
+//
+//            Log.d("Shows", "Shows growth s : " + growthShowStr);
+//
+//
+//        });
+
+
+
+
         btnSave.setOnClickListener(v -> {
             String name = ShopName.getText().toString().trim();
+            String fturnoverStr = FirstTurnOver.getText().toString().trim();
+            String sturnoverStr = SecondTurnOver.getText().toString().trim();
+            String editGrowthStr = edtGrowth.getText().toString().trim();
+            String growthShowStr = txtGrowthShow.getText().toString().replace("%", "").trim();
+            String growthPercentStr = txtGrowth.getText().toString().replace("%", "").trim();
 
-            String fturnover = FirstTurnOver.getText().toString().trim();
-            String sturnover = SecondTurnOver.getText().toString().trim();
-            String EditGrowth = edtGrowth.getText().toString().trim();
-            String GrowthShow = txtGrowthShow.getText().toString().trim();
-
-            if (fturnover.isEmpty() || sturnover.isEmpty()) {
-                Toast.makeText(this, "Enter both turnover values", Toast.LENGTH_SHORT).show();
+            if (TextUtils.isEmpty(fturnoverStr) || TextUtils.isEmpty(sturnoverStr) ||
+                    TextUtils.isEmpty(editGrowthStr) || TextUtils.isEmpty(growthShowStr)) {
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            int firstTurnOver = Integer.parseInt(fturnover);
-            int secondTurnOver = Integer.parseInt(sturnover);
-            int EDTGrowth = Integer.parseInt(EditGrowth);
-            int Result = Integer.parseInt(GrowthShow);
-
-
-            String growth_per = txtGrowth.getText().toString().trim();
-            int growths;
             try {
-                String cleanGrowth = growth_per.replace("%", "").trim();
-                float growthFloat = Float.parseFloat(cleanGrowth);
-                growths = Math.round(growthFloat);
-            } catch (NumberFormatException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Invalid growth percentage", Toast.LENGTH_SHORT).show();
-                return;
-            }
+                int firstTurnover = Integer.parseInt(fturnoverStr);
+                int secondTurnover = Integer.parseInt(sturnoverStr);
+                int edtGrowth = Integer.parseInt(editGrowthStr);
+                int result = Math.round(Float.parseFloat(growthShowStr));  // Final "Result" value
+                int growthPercent = Math.round(Float.parseFloat(growthPercentStr)); // txtGrowth cleaned
 
+                saveDataToSharedPref(name, holiday, highPerformDay, firstTurnover, secondTurnover, growthPercent, edtGrowth, result);
 
-            if (!name.isEmpty() && !growth_per.isEmpty()) {
-                saveDataToSharedPref(name, holiday, highPerformDay, firstTurnOver, secondTurnOver, growths, EDTGrowth, Result);
-                Toast.makeText(this, "Data Saved!", Toast.LENGTH_SHORT).show();
-//                Intent intent = new Intent(SecondActivity.this,Holi_High_Day.class);
-                Intent intent = new Intent(SecondActivity.this, GoToMAndD.class);
-                intent.putExtra("ResultTurnover", Result);
-                intent.putExtra("TurnOver", secondTurnOver);
+                Intent intent = new Intent(SecondActivity.this, YOYActivity.class);
+                intent.putExtra("ResultTurnover", result);
+                intent.putExtra("TurnOver", secondTurnover);
                 intent.putExtra("ShopName", name);
                 intent.putExtra("shopsHoliday", holiday);
                 intent.putExtra("HighPerformace", highPerformDay);
-                intent.putExtra("EdtGrowth", EDTGrowth);
+                intent.putExtra("EdtGrowth", edtGrowth);
                 startActivity(intent);
                 finish();
 
-                Log.d("HighPerformace", "HighPerformDays is : " + EDTGrowth);
-            } else {
-                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+                Log.d("DEBUG_LOG", "Saved and passed Result: " + result);
+            } catch (NumberFormatException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Invalid number format in one or more fields", Toast.LENGTH_SHORT).show();
             }
-            getCurrentFinancialYear();
-
-            String editGrowthStr = edtGrowth.getText().toString().trim();
-            String growthShowStr = txtGrowthShow.getText().toString().trim();
-
-            if (TextUtils.isEmpty(editGrowthStr) || TextUtils.isEmpty(growthShowStr)) {
-                Toast.makeText(this, "Please enter growth values", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            EDTGrowth = Integer.parseInt(editGrowthStr);
-            Result = Integer.parseInt(growthShowStr);
-
-            Log.d("Shows", "Shows growth s : " + growthShowStr);
-
-
         });
+
 
 
         FirstTurnOver.addTextChangedListener(new SimpleTextWatcher() {
@@ -149,6 +196,14 @@ public class SecondActivity extends AppCompatActivity {
         });
 
 
+
+        SecondTurnOver.addTextChangedListener(new SimpleTextWatcher() {
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+                calculateGrowthResult();
+            }
+        });
         edtGrowth.addTextChangedListener(new SimpleTextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -157,9 +212,10 @@ public class SecondActivity extends AppCompatActivity {
             }
         });
 
+
     }
 
-    public abstract class SimpleTextWatcher implements TextWatcher {
+    public abstract static class SimpleTextWatcher implements TextWatcher {
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after) {
         }
@@ -234,13 +290,13 @@ public class SecondActivity extends AppCompatActivity {
     }
 
 
-    private String getCurrentFinancialYear() {
+    private String getSecondLastFinancialYear() {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
         // Log.d("Year","Current6 year" +year + ""+month);
 
-        year = year - 2;
+        year = year - 3;
         int startYear, endYear;
         if (month >= Calendar.APRIL) {
             startYear = year;
@@ -258,7 +314,30 @@ public class SecondActivity extends AppCompatActivity {
     }
 
 
-    private String getCurrentFinancialYears() {
+    private String getLastFinancialYear() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        // Log.d("Year","Current6 year" +year + ""+month);
+
+        year = year - 2;
+        int startYear, endYear;
+        if (month >= Calendar.APRIL) {
+            startYear = year;
+            endYear = year + 1;
+            //  Log.d("startyear","start year is in if : "+startYear+" "+endYear);
+        } else {
+            startYear = year - 1;
+            endYear = year;
+            // Log.d("startyear","start year is in else : "+startYear+" "+endYear);
+
+        }
+        return startYear + "_" + String.valueOf(endYear).substring(2);
+
+
+    }
+
+    private String getCurrentFinancialYear() {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
@@ -283,23 +362,40 @@ public class SecondActivity extends AppCompatActivity {
 
 
     public void calculateGrowthResult() {
-        String growthText = edtGrowth.getText().toString().trim();
-        String secondTurnoverText = SecondTurnOver.getText().toString().trim();
 
-        if (!growthText.isEmpty() && !secondTurnoverText.isEmpty()) {
+
+        String second = SecondTurnOver.getText().toString().trim();
+        String  Ex_Growth_FY = edtGrowth.getText().toString().trim();
+
+        if (!Ex_Growth_FY.isEmpty() && !Ex_Growth_FY.isEmpty()) {
             try {
-                float growthPercent = Float.parseFloat(growthText);
-                int secondTurnover = Integer.parseInt(secondTurnoverText);
+                int firstValue = Integer.parseInt(second);
+                int secondValue = Integer.parseInt(Ex_Growth_FY);
+                int growth = secondValue - firstValue;
 
-                Float result = ((growthPercent / 100f) * secondTurnover) + secondTurnover;
+                if (firstValue != 0) {
+                    float percentage = ((float) growth / firstValue) * 100;
+                    String formatted = String.format("%.2f", percentage);
+                    txtGrowthShow.setText(formatted + " %");
 
-                txtGrowthShow.setText(String.valueOf(Math.round(result)));
+                    if (percentage >= 0) {
+                        txtGrowthShow.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
+                    } else {
+                        txtGrowthShow.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                    }
+                } else {
+                    txtGrowthShow.setText("∞");
+                    txtGrowthShow.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
+                }
             } catch (NumberFormatException e) {
-                txtGrowthShow.setText("0");
+                txtGrowthShow.setText("0 %");
+                txtGrowthShow.setTextColor(getResources().getColor(android.R.color.darker_gray));
             }
         } else {
-            txtGrowthShow.setText("0");
+            txtGrowthShow.setText("0 %");
+            txtGrowthShow.setTextColor(getResources().getColor(android.R.color.darker_gray));
         }
+
     }
 
 

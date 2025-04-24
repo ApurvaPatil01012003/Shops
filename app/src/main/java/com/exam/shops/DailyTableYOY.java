@@ -41,14 +41,20 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -59,35 +65,42 @@ public class DailyTableYOY extends AppCompatActivity {
     String Holiday;
     TextView txtTurnOver;
     //int SecondTurnOverValue;
-    int Result;
+   // int Result;
+    //float MonthlyTarget;
 
     int achievedValue;
     int quantities;
     int nobValue;
     String highPerDay;
-    int growthPer;
+    int TurnOver;
     int achieved;
     Button btnCPDF;
 
     float monthlyAchievedTotal = 0f;
-    float monthlyTarget = 0f;
+
     float monthlyAchievedPercent = 0f;
+int HighPerGrowthPer=10;
+
+//    Map<String, String> publicHolidayMap = new HashMap<String, String>() {{
+//        put("April", "14-04-2025");
+//        put("May", "01-05-2025");
+//        put("June", "17-06-2025");
+//        put("July", "21-07-2025");
+//        put("August", "15-08-2025");
+//        put("September", "29-09-2025");
+//        put("October", "02-10-2025");
+//        put("November", "11-11-2025");
+//        put("December", "25-12-2025");
+//        put("January", "26-01-2026");
+//        put("February", "19-02-2026");
+//        put("March", "29-03-2026");
+//    }};
+
+    Map<String, String> publicHolidayMap;
+    List<String> publicHolidayList;
 
 
-    Map<String, String> publicHolidayMap = new HashMap<String, String>() {{
-        put("April", "14-04-2025");
-        put("May", "01-05-2025");
-        put("June", "17-06-2025");
-        put("July", "21-07-2025");
-        put("August", "15-08-2025");
-        put("September", "29-09-2025");
-        put("October", "02-10-2025");
-        put("November", "11-11-2025");
-        put("December", "25-12-2025");
-        put("January", "26-01-2026");
-        put("February", "19-02-2026");
-        put("March", "29-03-2026");
-    }};
+
 
     private List<Float> originalWeights;
     private List<Float> finalTargetsGlobal;
@@ -116,18 +129,25 @@ public class DailyTableYOY extends AppCompatActivity {
 
 
         Holiday = getIntent().getStringExtra("ShopHoliday");
-        Result = getIntent().getIntExtra("ResultTurnYear", 0);
+      //  Result = getIntent().getIntExtra("ResultTurnYear", 0);
+            //  MonthlyTarget = getIntent().getFloatExtra("MonthlyTarget",0f);
+       //Log.d("Monthly","MonthlyTarget is Daily  : "+MonthlyTarget);
         // SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
         achievedValue = getIntent().getIntExtra("Achived_Value", 0);
         quantities = getIntent().getIntExtra("Quantity", 0);
         nobValue = getIntent().getIntExtra("NOB", 0);
         highPerDay = getIntent().getStringExtra("HighPerDay");
-        growthPer = getIntent().getIntExtra("Growth", 0);
+        TurnOver = getIntent().getIntExtra("Growth", 0);
 
-        Log.d("YOYDAILY", "Result turnover is : " + Result);
+       // Log.d("YOYDAILY", "Result turnover is : " + Result);
         Log.d("High", "High Performance Day : " + Holiday);
         Log.d("High", "High Performance Day : " + highPerDay);
-        Log.d("High", "High Performance Day : " + growthPer);
+        Log.d("High", "High Performance Day : " + TurnOver);
+
+        //publicHolidayMap = loadPublicHolidaysFromJson();
+
+        publicHolidayList=loadHolidayDates();
+
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getFincialYearMonths());
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -151,6 +171,9 @@ public class DailyTableYOY extends AppCompatActivity {
                     selectedMonth.set(Calendar.YEAR, year);
                     selectedMonth.set(Calendar.MONTH, monthIndex);
                     selectedMonth.set(Calendar.DAY_OF_MONTH, 1);
+                    clearOldExpectedValues(selectedMonth);
+
+
                     generateDateRows(selectedMonth);
                     getExpectedSumForPastDays(15);
                     getExpectedSumForPastDays(7);
@@ -174,6 +197,8 @@ public class DailyTableYOY extends AppCompatActivity {
             }
 
         });
+
+
     }
 
 
@@ -279,9 +304,37 @@ public class DailyTableYOY extends AppCompatActivity {
         Log.d("DailyTableYOY", "Working days : " + workingDays);
         Log.d("DailyTableYOY", "High per day : " + highPerfDays);
 
-        float monthlyTarget = (float) Result / 12f;
+      //  float monthlyTarget = (float) TurnOver / 12f;
+
+
+
+
+
+
+        SharedPreferences yoyPrefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+
+// Get the short month name
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM", Locale.ENGLISH);
+        String shortMonth = sdf.format(startDate.getTime());
+
+// Get the year for that month
+        String[] parts = getFinancialYear().split("_");
+        int fyStartYear = Integer.parseInt(parts[0]);
+        int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
+
+// Get updated monthly target
+        float monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
+
+        Log.d("MonthlyTargetFromPrefs", "Month: " + shortMonth + " " + dataYear + " | Target: " + monthlyTarget);
+
+
+
+
+
+
+
         float baseTargetDays = workingDays;
-        float growthMultiplier = 1 + (growthPer / 100f);
+        float growthMultiplier = 1 + (HighPerGrowthPer / 100f);
         float highPerfTarget = 0f;
 
         if (highPerfDays > 0) {
@@ -298,7 +351,9 @@ public class DailyTableYOY extends AppCompatActivity {
 
 
         List<String> prePublicHighPerfDates = new ArrayList<>();
-        List<String> publicHolidayDates = new ArrayList<>(publicHolidayMap.values());
+       // List<String> publicHolidayDates = new ArrayList<>(publicHolidayMap.values());
+        List<String> publicHolidayDates = new ArrayList<>(publicHolidayList);
+
 
         for (String holidayDateStr : publicHolidayDates) {
             try {
@@ -346,7 +401,7 @@ public class DailyTableYOY extends AppCompatActivity {
                 rawTarget = 0f;
             } else if (highPerfDaysList.contains(dayStr) || prePublicHighPerfDates.contains(dateStr)) {
                 type = "High Performance Day";
-                rawTarget = 1f * growthMultiplier;  // Weighted
+                rawTarget = 1f * growthMultiplier;
             } else {
                 type = "Working Day";
                 rawTarget = 1f;
@@ -590,7 +645,28 @@ public class DailyTableYOY extends AppCompatActivity {
 
         }
 
-        monthlyTarget = Result / 12f;
+       // monthlyTarget = TurnOver / 12f;
+
+
+        //SharedPreferences yoyPrefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+
+// Get the short month name
+       // SimpleDateFormat sdf = new SimpleDateFormat("MMM", Locale.ENGLISH);
+         shortMonth = sdf.format(startDate.getTime());
+
+// Get the year for that month
+             parts = getFinancialYear().split("_");
+         fyStartYear = Integer.parseInt(parts[0]);
+         dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
+
+// Get updated monthly target
+         monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
+
+        Log.d("MonthlyTargetFromPrefs", "Month: " + shortMonth + " " + dataYear + " | Target: " + monthlyTarget);
+
+
+
+
         monthlyAchievedPercent = (monthlyTarget != 0) ? (monthlyAchievedTotal * 100f / monthlyTarget) : 0f;
 
         Log.d("MonthlySummary", "Achieved: " + monthlyAchievedTotal + " | Percent: " + monthlyAchievedPercent);
@@ -604,34 +680,8 @@ public class DailyTableYOY extends AppCompatActivity {
         this.finalTargetsGlobal = new ArrayList<>(finalTargets);
         this.dayTypesGlobal = new ArrayList<>(dayTypes);
 
-//
-//        // Calculate and save last 7 and 15 days expected target total
-//        float expected7 = 0f;
-//        float expected15 = 0f;
-//
-//        SimpleDateFormat keyFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
-//        Calendar today = Calendar.getInstance();
-//        SharedPreferences.Editor editor = getSharedPreferences("Shop Data", MODE_PRIVATE).edit();
-//
-//        for (int i = 1; i <= 15; i++) {
-//            Calendar calCopy = (Calendar) today.clone();
-//            calCopy.add(Calendar.DAY_OF_MONTH, -i);
-//            String dateKey = keyFormat.format(calCopy.getTime());
-//            float expectedForDay = getSharedPreferences("Shop Data", MODE_PRIVATE).getFloat("Expected_" + dateKey, -1);
-//
-//            if (expectedForDay >= 0) {
-//                if (i <= 7) expected7 += expectedForDay;
-//                expected15 += expectedForDay;
-//            }
-//        }
-//
-//// Save them for GoToActivity
-//        editor.putFloat("Expected_Target_15_Days", expected15);
-//        editor.putFloat("Expected_Target_7_Days", expected7);
-//        editor.apply();
-//
-//        Log.d("ExpectedSave", "15 days: ₹" + expected15 + " | 7 days: ₹" + expected7);
 
+    //    InitializerRecentDays.cacheExpectedSums(this);
 
 
 
@@ -840,7 +890,7 @@ public class DailyTableYOY extends AppCompatActivity {
 
 
     private void rebalanceTargets(String editedDate, float delta) {
-        float totalMonthlyTarget = Result;
+        float totalMonthlyTarget = TurnOver;
 
         // Find index of the edited date
         int editedIndex = dateListGlobal.indexOf(editedDate);
@@ -904,11 +954,7 @@ public class DailyTableYOY extends AppCompatActivity {
             }
 
         }
-
-
     }
-
-
 
     private float getExpectedSumForPastDays(int numDays) {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
@@ -931,6 +977,99 @@ public class DailyTableYOY extends AppCompatActivity {
         return totalExpected;
     }
 
+    private void clearOldExpectedValues(Calendar selectedMonth) {
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        Calendar cal = (Calendar) selectedMonth.clone();
+        int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+
+        for (int i = 1; i <= daysInMonth; i++) {
+            cal.set(Calendar.DAY_OF_MONTH, i);
+            String key = "Expected_" + sdf.format(cal.getTime());
+            editor.remove(key);
+        }
+
+        editor.apply();
+        Log.d("RESET_EXPECTED", "Old expected values cleared for selected month.");
+    }
+
+    private String getFinancialYear() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+
+        int startYear, endYear;
+        if (month >= Calendar.APRIL) {
+            startYear = year;
+            endYear = year + 1;
+        } else {
+            startYear = year - 1;
+            endYear = year;
+        }
+        return startYear + "_" + String.valueOf(endYear).substring(2);
+    }
+
+//    private Map<String, String> loadPublicHolidaysFromJson() {
+//        Map<String, String> holidayMap = new HashMap<>();
+//        try {
+//            InputStream is = getAssets().open("public_holidays.json");
+//            int size = is.available();
+//            byte[] buffer = new byte[size];
+//            is.read(buffer);
+//            is.close();
+//
+//            String jsonString = new String(buffer, "UTF-8");
+//            JSONObject jsonObject = new JSONObject(jsonString);
+//
+//            Iterator<String> keys = jsonObject.keys();
+//            while (keys.hasNext()) {
+//                String key = keys.next();
+//                String value = jsonObject.getString(key);
+//                holidayMap.put(key, value);
+//            }
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        return holidayMap;
+//    }
+
+
+    private List<String> loadHolidayDates() {
+        List<String> holidays = new ArrayList<>();
+        SimpleDateFormat inputFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        SimpleDateFormat outputFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+
+        try {
+            InputStream is = getAssets().open("public_holidays.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+
+            String jsonStr = new String(buffer, "UTF-8");
+            JSONObject jsonObj = new JSONObject(jsonStr);
+            JSONArray array = jsonObj.getJSONArray("public_holidays");
+
+            for (int i = 0; i < array.length(); i++) {
+                String rawDate = array.getString(i);
+                try {
+                    String formatted = outputFormat.format(inputFormat.parse(rawDate));
+                    holidays.add(formatted);
+                    Log.d("PUBLIC_HOLIDAY_PARSED", formatted);
+                } catch (Exception e) {
+                    Log.e("DATE_PARSE_ERROR", "Invalid date: " + rawDate);
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return holidays;
+    }
 
 
 

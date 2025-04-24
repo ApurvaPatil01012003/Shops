@@ -40,8 +40,8 @@ public class YOYActivity extends AppCompatActivity {
 
     TextView txtTurnOver;
     TableLayout tableLayout;
-   // int Turnover;
-    int Result;
+    int Turnover;
+    //int Result;
     String financialYear;
 
     List<String> months = Arrays.asList(
@@ -58,8 +58,10 @@ public class YOYActivity extends AppCompatActivity {
 
         txtTurnOver = findViewById(R.id.txtTurnOver);
         tableLayout = findViewById(R.id.tableLayout);
-        Result = getIntent().getIntExtra("ResultTurnYear", 0);
-        txtTurnOver.setText("Yearly Target : " + String.valueOf(Result));
+
+       // Result = getIntent().getIntExtra("ResultTurnYear", 0);
+        Turnover = getIntent().getIntExtra("EdtGrowth", 0);
+        txtTurnOver.setText("Yearly Target : " + String.valueOf(Turnover));
 
         // Turnover = getIntent().getIntExtra("TurnYear", 0);
         financialYear = getCurrentFinancialYear();
@@ -69,14 +71,15 @@ public class YOYActivity extends AppCompatActivity {
 
         SharedPreferences sharedPref = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         // sharedPref.edit().putString("TurnOver", String.valueOf(Turnover)).apply();
-        sharedPref.edit().putString("ResultTurnOver", String.valueOf(Result)).apply();
+        Turnover = getIntent().getIntExtra("EdtGrowth", sharedPref.getInt("EdtGrowth", 0));
+
 
 
 
         addMonthRows();
 
         int total = getTotalAchievedInYear();
-        float percentOfYear = (Result != 0) ? (total * 100.0f / Result) : 0;
+        float percentOfYear = (Turnover != 0) ? (total * 100.0f / Turnover) : 0;
 
         Log.d("TotalAchieved", "Total Achieved is: " + total);
         Log.d("TotalPercent", "Total Achieved %: " + percentOfYear);
@@ -92,7 +95,7 @@ public class YOYActivity extends AppCompatActivity {
             @Override
             public void handleOnBackPressed() {
                 int total = getTotalAchievedInYear();
-                float percentOfYear = (Result != 0) ? (total * 100.0f / Result) : 0;
+                float percentOfYear = (Turnover != 0) ? (total * 100.0f / Turnover) : 0;
 
                 Intent intent = new Intent(YOYActivity.this, GoToMAndD.class);
                 intent.putExtra("TotalAchived", total);
@@ -103,11 +106,20 @@ public class YOYActivity extends AppCompatActivity {
         });
 
 
-
+        getAllMonthlyExpectedValues();
 
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        Turnover = getSharedPreferences("shop_data", MODE_PRIVATE).getInt("editGrowth", 0);
+        txtTurnOver.setText("Yearly Target : " + Turnover);
+        tableLayout.removeAllViews();
+        addMonthRows();
+    }
 
 
     private void addMonthRows() {
@@ -120,7 +132,7 @@ public class YOYActivity extends AppCompatActivity {
             String shortMonth = convertToShortMonth(month);
             int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
 
-            float expected = prefs.getFloat("expected_" + shortMonth + "_" + dataYear, Result / 12.0f);
+            float expected = prefs.getFloat("expected_" + shortMonth + "_" + dataYear, Turnover / 12.0f);
             int achieved = prefs.getInt("data_" + shortMonth + "_" + dataYear + "_Achieved", 0);
             float percent = (expected != 0) ? (achieved / expected) * 100 : 0;
 
@@ -504,7 +516,7 @@ public class YOYActivity extends AppCompatActivity {
             String key = "expected_" + month + "_" + targetYear;
             String mapKey = month + "_" + targetYear;
 
-            float oldValue = monthTargetMap.getOrDefault(mapKey, Result / 12f);
+            float oldValue = monthTargetMap.getOrDefault(mapKey, Turnover / 12f);
             float newValue = oldValue - splitAmount;
             if (newValue < 0) newValue = 0;
 
@@ -537,6 +549,28 @@ public class YOYActivity extends AppCompatActivity {
         }
 
         return result;
+    }
+
+
+    private Map<String, Float> getAllMonthlyExpectedValues() {
+        SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+        Map<String, Float> monthData = new HashMap<>();
+
+        String[] parts = financialYear.split("_");
+        int fyStartYear = Integer.parseInt(parts[0]);
+
+        for (String month : months) {
+            String shortMonth = convertToShortMonth(month);
+            int year = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
+            float expected = prefs.getFloat("expected_" + shortMonth + "_" + year, Turnover / 12.0f);
+
+            monthData.put(month + " " + year, expected);
+
+            Log.d("MonthlyData","Month data is : "+month+" "+year+" "+expected);
+        }
+
+        return monthData;
+
     }
 
 

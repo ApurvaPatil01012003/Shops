@@ -13,7 +13,7 @@
         android:gravity="center"
         android:orientation="vertical">
 
-        <!-- Logo -->
+
         <ImageView
             android:id="@+id/ivLogo"
             android:layout_width="200dp"
@@ -50,7 +50,7 @@
 
                 <!-- Shop Name -->
                 <TextView
-                    android:id="@+id/ShopName"
+                    android:id="@+id/ResetShopName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="20dp"
@@ -61,7 +61,7 @@
 
                 <!-- Label: FY 2022-2023 Revenue -->
                 <TextView
-                    android:id="@+id/txtFirstTurnOver"
+                    android:id="@+id/txtResetFirstTurnOver"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="FY 2022-2023 Revenue"
@@ -69,7 +69,7 @@
                     android:textSize="14sp" />
 
                 <EditText
-                    android:id="@+id/FirstTurnOver"
+                    android:id="@+id/ResetFirstTurnOver"
                     style="@style/CustomTextInputLayoutOutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -79,9 +79,9 @@
                     android:inputType="numberDecimal"
                     android:padding="12dp" />
 
-                <!-- Label: FY 2023-2024 Revenue -->
+
                 <TextView
-                    android:id="@+id/txtSecondTurnOver"
+                    android:id="@+id/txtResetSecondTurnOver"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#000000"
@@ -89,7 +89,7 @@
                     android:textSize="12sp" />
 
                 <EditText
-                    android:id="@+id/SecondTurnOver"
+                    android:id="@+id/ResetSecondTurnOver"
                     style="@style/CustomTextInputLayoutOutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -101,7 +101,7 @@
 
                 <!-- Growth Output -->
                 <TextView
-                    android:id="@+id/txtGrowth"
+                    android:id="@+id/txtResetGrowth"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
@@ -111,7 +111,7 @@
 
                 <!-- Label: Expected Growth -->
                 <TextView
-                    android:id="@+id/EGFY"
+                    android:id="@+id/ResetEGFY"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#000000"
@@ -119,7 +119,7 @@
                     android:textSize="12sp" />
 
                 <EditText
-                    android:id="@+id/edtGrowth"
+                    android:id="@+id/edtResetGrowth"
                     style="@style/CustomTextInputLayoutOutlinedBox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -129,22 +129,22 @@
                     android:inputType="numberDecimal"
                     android:padding="14dp" />
                 <TextView
-                    android:id="@+id/txtGrowthShow"
+                    android:id="@+id/txtResetGrowthShow"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
                     android:text="Result"
                     android:textColor="#000000"
                     android:textSize="16sp" />
-                <!-- Next Button -->
+
                 <Button
-                    android:id="@+id/btnSave"
+                    android:id="@+id/btnReset"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:backgroundTint="#007BFF"
                     android:fontFamily="sans-serif-medium"
                     android:padding="12dp"
-                    android:text="Next"
+                    android:text="Reset"
                     android:textAllCaps="true"
                     android:textColor="#FFFFFF" />
             </LinearLayout>

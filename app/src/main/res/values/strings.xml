@@ -2,4 +2,6 @@
     <string name="app_name">MBT - My Business Tracker</string>
     <string name="hello">Hello</string>
     <string name="download_to_pdf">Download to PDF</string>
+    <string name="open_drawer">open_drawer</string>
+    <string name="close_drawer">close_drawer</string>
 </resources>
