@@ -80,7 +80,7 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
-            <!-- YTD Card -->
+
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -437,7 +437,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_gravity="start"
-        app:menu="@menu/drawer_menu"
-        />
+        app:headerLayout="@layout/nav_header_main"
+        app:menu="@menu/drawer_menu"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>

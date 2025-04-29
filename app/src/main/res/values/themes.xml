@@ -3,6 +3,10 @@
     <style name="Base.Theme.Shops" parent="Theme.Material3.Light.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:forceDarkAllowed" tools:targetApi="q">false</item>
+
+        <!-- Optional: Background color override -->
+        <item name="android:windowBackground">#FFFFFF</item>
     </style>
 
     <style name="Theme.Shops" parent="Base.Theme.Shops" />
@@ -11,7 +15,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">#555555</item>
+        <item name="android:textColor">#000000</item>
         <item name="android:layout_marginBottom">4dp</item>
     </style>
 </resources>

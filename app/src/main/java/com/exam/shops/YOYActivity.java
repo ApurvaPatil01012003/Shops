@@ -3,9 +3,13 @@ package com.exam.shops;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.Typeface;
+import android.graphics.pdf.PdfDocument;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
@@ -16,12 +20,14 @@ import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AlertDialog;
@@ -29,11 +35,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
 
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class YOYActivity extends AppCompatActivity {
@@ -50,7 +62,7 @@ public class YOYActivity extends AppCompatActivity {
     );
     Map<String, Float> monthTargetMap = new HashMap<>();
 
-
+Button btnExportPdf;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,6 +70,7 @@ public class YOYActivity extends AppCompatActivity {
 
         txtTurnOver = findViewById(R.id.txtTurnOver);
         tableLayout = findViewById(R.id.tableLayout);
+        btnExportPdf = findViewById(R.id.btnExportPdf);
 
        // Result = getIntent().getIntExtra("ResultTurnYear", 0);
         Turnover = getIntent().getIntExtra("EdtGrowth", 0);
@@ -90,6 +103,7 @@ public class YOYActivity extends AppCompatActivity {
                 .putInt("TotalAchievedValue", total)
                 .putFloat("TotalAchievedPercentage", percentOfYear)
                 .apply();
+        saveMonthTargetMap((HashMap<String, Float>) monthTargetMap);
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
@@ -100,6 +114,9 @@ public class YOYActivity extends AppCompatActivity {
                 Intent intent = new Intent(YOYActivity.this, GoToMAndD.class);
                 intent.putExtra("TotalAchived", total);
                 intent.putExtra("TotalAchPer", percentOfYear);
+                HashMap<String, Float> monthTargetMapToPass = new HashMap<>(monthTargetMap);
+                intent.putExtra("month_target_map", monthTargetMapToPass);
+                Log.d("monthTargetMApToPass","Monthis :"+monthTargetMapToPass);
                 startActivity(intent);
                 finishAffinity();
             }
@@ -108,8 +125,28 @@ public class YOYActivity extends AppCompatActivity {
 
         getAllMonthlyExpectedValues();
 
-
+        btnExportPdf.setOnClickListener(v -> generatePdfWithTable());
     }
+    private void saveMonthTargetMap(HashMap<String, Float> monthTargetMap) {
+        SharedPreferences sharedPrefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPrefs.edit();
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            for (String key : monthTargetMap.keySet()) {
+                jsonObject.put(key, monthTargetMap.get(key));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        editor.putString("month_target_map", jsonObject.toString());
+        editor.apply();
+
+        Log.d("SharedPrefSave", "Month target map saved: " + jsonObject.toString());
+    }
+
+
 
     @Override
     protected void onResume() {
@@ -209,7 +246,7 @@ public class YOYActivity extends AppCompatActivity {
                     ? fyStartYear + 1 : fyStartYear;
 
             String key = "data_" + shortMonth + "_" + dataYear + "_Achieved";
-            totalAchieved += prefs.getInt(key, 0); // default to 0 if not found
+            totalAchieved += prefs.getInt(key, 0);
         }
         Log.d("TotalAchieved","Total Achived is :"+totalAchieved);
         return totalAchieved;
@@ -266,6 +303,8 @@ public class YOYActivity extends AppCompatActivity {
     }
 
 
+
+
     private void showSingleEditDialog(TextView tvTarget, TextView tvAchieved, TextView tvPercentage,
                                       String shortMonth, boolean isTargetEdit) {
 
@@ -299,14 +338,19 @@ public class YOYActivity extends AppCompatActivity {
 
 
                 editor.putFloat("expected_" + shortMonth + "_" + dataYear, newValueFloat);
+                editor.putBoolean("edited_" + shortMonth + "_" + dataYear, true);
                 editor.apply();
+
+                redistributeToUneditedMonths(shortMonth, dataYear);
 
                 String monthKey = shortMonth + "_" + dataYear;
                 monthTargetMap.put(monthKey, newValueFloat);
 
 
                 if (diff != 0) {
-                    redistributeDifference(shortMonth, dataYear, diff);
+                   // redistributeDifference(shortMonth, dataYear, diff);
+
+
                 }
 
                 // Refresh whole UI after all updates (including edited month)
@@ -323,7 +367,7 @@ public class YOYActivity extends AppCompatActivity {
 
            // editor.apply();
 
-            editor.putFloat("expected_" + shortMonth + "_" + dataYear, newValueFloat);
+           // editor.putFloat("expected_" + shortMonth + "_" + dataYear, newValueFloat);
             editor.apply();
 
             updatePercentage(tvTarget, tvAchieved, tvPercentage, shortMonth, prefs);
@@ -497,36 +541,51 @@ public class YOYActivity extends AppCompatActivity {
         return row;
     }
 
-    private void redistributeDifference(String editedMonth, int editedYear, float diff) {
-        List<String> remainingMonths = getRemainingMonths(editedMonth);
 
-        if (remainingMonths.isEmpty()) return;
 
-        float splitAmount = diff / remainingMonths.size();
 
-        SharedPreferences.Editor editor = getSharedPreferences("YOY_PREFS", MODE_PRIVATE).edit();
+    private void redistributeToUneditedMonths(String justEditedMonth, int justEditedYear) {
+        SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
 
-        for (String month : remainingMonths) {
+        float totalYearTarget = Turnover;
 
-            int targetYear = (month.equals("Jan") || month.equals("Feb") || month.equals("Mar"))
+        List<String> orderedMonths = Arrays.asList(
+                "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"
+        );
+
+        float totalEdited = 0f;
+        List<String> uneditedKeys = new ArrayList<>();
+
+        for (String month : orderedMonths) {
+            int year = (month.equals("Jan") || month.equals("Feb") || month.equals("Mar"))
                     ? Integer.parseInt(financialYear.split("_")[0]) + 1
                     : Integer.parseInt(financialYear.split("_")[0]);
 
+            String fullKey = month + "_" + year;
+            float currentValue = prefs.getFloat("expected_" + fullKey, Turnover / 12f);
+            boolean isEdited = prefs.getBoolean("edited_" + fullKey, false);
 
-            String key = "expected_" + month + "_" + targetYear;
-            String mapKey = month + "_" + targetYear;
-
-            float oldValue = monthTargetMap.getOrDefault(mapKey, Turnover / 12f);
-            float newValue = oldValue - splitAmount;
-            if (newValue < 0) newValue = 0;
-
-            editor.putFloat(key, newValue);
-            monthTargetMap.put(mapKey, newValue);
-
-            Log.d("REDIST_TARGET", key + " updated to " + newValue);
+            if (isEdited) {
+                totalEdited += currentValue;
+            } else {
+                uneditedKeys.add(fullKey);
+            }
         }
 
-        editor.apply();
+        float remainingTarget = totalYearTarget - totalEdited;
+
+        if (uneditedKeys.size() > 0) {
+            float newPerMonth = remainingTarget / uneditedKeys.size();
+
+            for (String key : uneditedKeys) {
+                editor.putFloat("expected_" + key, newPerMonth);
+                Log.d("REBALANCE", "Set " + key + " = " + newPerMonth);
+            }
+
+            editor.apply();
+        }
 
         // Refresh UI
         monthTargetMap.clear();
@@ -534,22 +593,25 @@ public class YOYActivity extends AppCompatActivity {
         addMonthRows();
     }
 
-    private List<String> getRemainingMonths(String currentShortMonth) {
-        List<String> orderedMonths = Arrays.asList(
-                "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-                "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"
-        );
 
-        List<String> result = new ArrayList<>();
-        boolean startCollecting = false;
 
-        for (String month : orderedMonths) {
-            if (startCollecting) result.add(month);
-            if (month.equals(currentShortMonth)) startCollecting = true;
-        }
 
-        return result;
-    }
+//    private List<String> getRemainingMonths(String currentShortMonth) {
+//        List<String> orderedMonths = Arrays.asList(
+//                "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+//                "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"
+//        );
+//
+//        List<String> result = new ArrayList<>();
+//        boolean startCollecting = false;
+//
+//        for (String month : orderedMonths) {
+//            if (startCollecting) result.add(month);
+//            if (month.equals(currentShortMonth)) startCollecting = true;
+//        }
+//
+//        return result;
+//    }
 
 
     private Map<String, Float> getAllMonthlyExpectedValues() {
@@ -571,6 +633,124 @@ public class YOYActivity extends AppCompatActivity {
 
         return monthData;
 
+    }
+    private void generatePdfWithTable() {
+        PdfDocument document = new PdfDocument();
+        Paint paint = new Paint();
+        Paint titlePaint = new Paint();
+        Paint linePaint = new Paint();
+        Paint headerPaint = new Paint();
+
+        int pageWidth = 595;
+        int pageHeight = 842;
+        int margin = 20;
+
+        int tableStartX = margin;
+        int tableStartY = 100;
+        int rowHeight = 40;
+        int tableWidth = pageWidth - 2 * margin;
+
+        int[] columnWidths = {tableWidth / 4, tableWidth / 4, tableWidth / 4, tableWidth / 4}; // 4 columns
+
+        titlePaint.setTypeface(Typeface.create(Typeface.DEFAULT_BOLD, Typeface.BOLD));
+        titlePaint.setTextSize(20f);
+        titlePaint.setColor(Color.BLACK);
+
+        paint.setColor(Color.BLACK);
+        paint.setTextSize(12f);
+
+        headerPaint.setColor(Color.LTGRAY);
+
+        linePaint.setColor(Color.BLACK);
+        linePaint.setStrokeWidth(1);
+
+        PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, 1).create();
+        PdfDocument.Page page = document.startPage(pageInfo);
+        Canvas canvas = page.getCanvas();
+
+        // Draw title
+        canvas.drawText("Monthly Report", margin, 60, titlePaint);
+
+        // Draw Header Background
+        canvas.drawRect(tableStartX, tableStartY, tableStartX + tableWidth, tableStartY + rowHeight, headerPaint);
+
+        // Header titles
+        String[] headers = {"Month", "Target (₹)", "Achieved (₹)", "Achieved %"};
+        int x = tableStartX;
+        for (int i = 0; i < headers.length; i++) {
+            canvas.drawText(headers[i], x + 10, tableStartY + 25, paint);
+            x += columnWidths[i];
+        }
+
+        // Draw horizontal line below header
+        canvas.drawLine(tableStartX, tableStartY, tableStartX + tableWidth, tableStartY, linePaint);
+        canvas.drawLine(tableStartX, tableStartY + rowHeight, tableStartX + tableWidth, tableStartY + rowHeight, linePaint);
+
+        int currentY = tableStartY + rowHeight;
+
+        SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+        String[] parts = financialYear.split("_");
+        int fyStartYear = Integer.parseInt(parts[0]);
+
+        for (String month : months) {
+            if (currentY + rowHeight > pageHeight - 50) {
+                document.finishPage(page);
+                page = document.startPage(pageInfo);
+                canvas = page.getCanvas();
+                currentY = margin;
+            }
+
+            String shortMonth = convertToShortMonth(month);
+            int year = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
+
+            float expected = prefs.getFloat("expected_" + shortMonth + "_" + year, 0f);
+            int achieved = prefs.getInt("data_" + shortMonth + "_" + year + "_Achieved", 0);
+            float percent = expected != 0 ? (achieved * 100f / expected) : 0f;
+
+            x = tableStartX;
+            String[] rowData = {
+                    month,
+                    String.format(Locale.US, "%.0f", expected),
+                    String.valueOf(achieved),
+                    String.format(Locale.US, "%.2f%%", percent)
+            };
+
+            for (int i = 0; i < rowData.length; i++) {
+                canvas.drawText(rowData[i], x + 10, currentY + 25, paint);
+                x += columnWidths[i];
+            }
+
+            // Draw lines
+            canvas.drawLine(tableStartX, currentY, tableStartX + tableWidth, currentY, linePaint);
+            currentY += rowHeight;
+            canvas.drawLine(tableStartX, currentY, tableStartX + tableWidth, currentY, linePaint);
+        }
+
+        // Draw vertical lines
+        int verticalX = tableStartX;
+        for (int w : columnWidths) {
+            canvas.drawLine(verticalX, tableStartY, verticalX, currentY, linePaint);
+            verticalX += w;
+        }
+        canvas.drawLine(tableStartX + tableWidth, tableStartY, tableStartX + tableWidth, currentY, linePaint);
+
+        document.finishPage(page);
+
+        try {
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                    "Monthly_Report_" + System.currentTimeMillis() + ".pdf");
+
+            FileOutputStream out = new FileOutputStream(file);
+            document.writeTo(out);
+            document.close();
+            out.close();
+
+            Toast.makeText(this, "PDF Saved: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Error saving PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
 

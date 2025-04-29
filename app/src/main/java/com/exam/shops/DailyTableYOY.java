@@ -65,7 +65,7 @@ public class DailyTableYOY extends AppCompatActivity {
     String Holiday;
     TextView txtTurnOver;
     //int SecondTurnOverValue;
-   // int Result;
+    // int Result;
     //float MonthlyTarget;
 
     int achievedValue;
@@ -79,7 +79,7 @@ public class DailyTableYOY extends AppCompatActivity {
     float monthlyAchievedTotal = 0f;
 
     float monthlyAchievedPercent = 0f;
-int HighPerGrowthPer=10;
+    int HighPerGrowthPer=10;
 
 //    Map<String, String> publicHolidayMap = new HashMap<String, String>() {{
 //        put("April", "14-04-2025");
@@ -98,9 +98,6 @@ int HighPerGrowthPer=10;
 
     Map<String, String> publicHolidayMap;
     List<String> publicHolidayList;
-
-
-
 
     private List<Float> originalWeights;
     private List<Float> finalTargetsGlobal;
@@ -129,9 +126,9 @@ int HighPerGrowthPer=10;
 
 
         Holiday = getIntent().getStringExtra("ShopHoliday");
-      //  Result = getIntent().getIntExtra("ResultTurnYear", 0);
-            //  MonthlyTarget = getIntent().getFloatExtra("MonthlyTarget",0f);
-       //Log.d("Monthly","MonthlyTarget is Daily  : "+MonthlyTarget);
+        //  Result = getIntent().getIntExtra("ResultTurnYear", 0);
+        //  MonthlyTarget = getIntent().getFloatExtra("MonthlyTarget",0f);
+        //Log.d("Monthly","MonthlyTarget is Daily  : "+MonthlyTarget);
         // SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
         achievedValue = getIntent().getIntExtra("Achived_Value", 0);
         quantities = getIntent().getIntExtra("Quantity", 0);
@@ -139,7 +136,7 @@ int HighPerGrowthPer=10;
         highPerDay = getIntent().getStringExtra("HighPerDay");
         TurnOver = getIntent().getIntExtra("Growth", 0);
 
-       // Log.d("YOYDAILY", "Result turnover is : " + Result);
+        // Log.d("YOYDAILY", "Result turnover is : " + Result);
         Log.d("High", "High Performance Day : " + Holiday);
         Log.d("High", "High Performance Day : " + highPerDay);
         Log.d("High", "High Performance Day : " + TurnOver);
@@ -171,7 +168,7 @@ int HighPerGrowthPer=10;
                     selectedMonth.set(Calendar.YEAR, year);
                     selectedMonth.set(Calendar.MONTH, monthIndex);
                     selectedMonth.set(Calendar.DAY_OF_MONTH, 1);
-                    clearOldExpectedValues(selectedMonth);
+                   // clearOldExpectedValues(selectedMonth);
 
 
                     generateDateRows(selectedMonth);
@@ -303,14 +300,6 @@ int HighPerGrowthPer=10;
         }
         Log.d("DailyTableYOY", "Working days : " + workingDays);
         Log.d("DailyTableYOY", "High per day : " + highPerfDays);
-
-      //  float monthlyTarget = (float) TurnOver / 12f;
-
-
-
-
-
-
         SharedPreferences yoyPrefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
 
 // Get the short month name
@@ -326,12 +315,6 @@ int HighPerGrowthPer=10;
         float monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
 
         Log.d("MonthlyTargetFromPrefs", "Month: " + shortMonth + " " + dataYear + " | Target: " + monthlyTarget);
-
-
-
-
-
-
 
         float baseTargetDays = workingDays;
         float growthMultiplier = 1 + (HighPerGrowthPer / 100f);
@@ -351,7 +334,7 @@ int HighPerGrowthPer=10;
 
 
         List<String> prePublicHighPerfDates = new ArrayList<>();
-       // List<String> publicHolidayDates = new ArrayList<>(publicHolidayMap.values());
+        // List<String> publicHolidayDates = new ArrayList<>(publicHolidayMap.values());
         List<String> publicHolidayDates = new ArrayList<>(publicHolidayList);
 
 
@@ -427,17 +410,32 @@ int HighPerGrowthPer=10;
 
         List<Boolean> isUserEdited = new ArrayList<>();
 
+
+
+        SharedPreferences.Editor editor = prefs.edit();
         for (int i = 0; i < rawTargets.size(); i++) {
             String dateKey = dateList.get(i);
-            String savedKey = "Expected_" + dateKey;
-            float saved = prefs.getFloat(savedKey, -1f);
+            boolean isEdited = prefs.getBoolean("edited_" + dateKey, false);
 
-            if (saved >= 0) {
+            // Reset if not edited
+            if (!isEdited) {
+                editor.remove("Expected_" + dateKey);
+            }
+        }
+        editor.apply();
+
+// Modify the finalTargets assignment loop:
+        for (int i = 0; i < rawTargets.size(); i++) {
+            String dateKey = dateList.get(i);
+            float saved = prefs.getFloat("Expected_" + dateKey, -1f);
+            boolean isEdited = prefs.getBoolean("edited_" + dateKey, false);
+
+            if (isEdited && saved >= 0) {
                 finalTargets.add(saved);
                 totalEditedTarget += saved;
                 isUserEdited.add(true);
             } else {
-                finalTargets.add(0f); // placeholder
+                finalTargets.add(0f);
                 totalAutoTargetWeight += rawTargets.get(i);
                 isUserEdited.add(false);
             }
@@ -471,30 +469,32 @@ int HighPerGrowthPer=10;
             cal.set(Calendar.DAY_OF_MONTH, i + 1);
             String dayStr = dayFormat.format(cal.getTime());
 
-            //String formattedDailyTarget = String.format("%.2f", targetForDay);
+
             float savedExpected = prefs.getFloat("Expected_" + dateStr, -1f);
             if (savedExpected >= 0) {
                 targetForDay = savedExpected;
             }
             String formattedDailyTarget = String.format("%.2f", targetForDay);
 
+
             //  SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
             achieved = prefs.getInt("Achieved_" + dateStr, 0);
             monthlyAchievedTotal += achieved;
 
-          //  SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
-            SharedPreferences.Editor editor = prefs.edit();
+            //  SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+            // SharedPreferences.Editor editor = prefs.edit();
 
 
             if (!prefs.contains("Expected_" + dateStr)) {
                 editor.putFloat("Expected_" + dateStr, targetForDay);
                 editor.apply();
+                Log.d("DayTarget","DAILY TARGET : "+dateStr+"  "+targetForDay);
             }
 
 
             int quantity = prefs.getInt("Quantity_" + dateStr, 0);
             int NOB = prefs.getInt("NOB_" + dateStr, 0);
-            int ABS = (NOB != 0) ? quantity / NOB : 0;
+            float ABS = (NOB != 0) ? (float) quantity / NOB : 0;
             float ATV = (NOB != 0) ? (float) achieved / NOB : 0;
             float ASP = (quantity != 0) ? (float) achieved / quantity : 0;
             float percentage = (targetForDay != 0) ? (achieved / targetForDay) * 100f : 0f;
@@ -511,7 +511,7 @@ int HighPerGrowthPer=10;
             ((TextView) cardView.findViewById(R.id.txtAchievedPer)).setText("Achieved %: " + String.format("%.2f%%", percentage));
             ((TextView) cardView.findViewById(R.id.txtQuantity)).setText("Quantity: " + quantity);
             ((TextView) cardView.findViewById(R.id.txtNOB)).setText("NOB: " + NOB);
-            ((TextView) cardView.findViewById(R.id.txtABS)).setText("ABS: " + ABS);
+            ((TextView) cardView.findViewById(R.id.txtABS)).setText("ABS: " + String.format(Locale.US, "%.2f", ABS));
             ((TextView) cardView.findViewById(R.id.txtATV)).setText("ATV: " + String.format(Locale.US, "%.2f", ATV));
             ((TextView) cardView.findViewById(R.id.txtASP)).setText("ASP: " + String.format(Locale.US, "%.2f", ASP));
 
@@ -549,10 +549,11 @@ int HighPerGrowthPer=10;
                 float percent = (expected != 0) ? (achieved / expected) * 100f : 0f;
                 float atv = (nob != 0) ? (float) achieved / nob : 0f;
                 float asp = (qty != 0) ? (float) achieved / qty : 0f;
-                int abs = (nob != 0) ? qty / nob : 0;
+                float abs = (nob != 0) ? (float) qty / nob : 0;
 
                 txtAchievedPer.setText(String.format("Achieved %%: %.2f%%", percent));
-                txtABS.setText("ABS: " + abs);
+                txtABS.setText("ABS: " + String.format(Locale.US, "%.2f", abs));
+
                 txtATV.setText("ATV: " + String.format(Locale.US, "%.2f", atv));
                 txtASP.setText("ASP: " + String.format(Locale.US, "%.2f", asp));
 
@@ -566,10 +567,11 @@ int HighPerGrowthPer=10;
                 }
 
 
-                TodayDataUtils.updateTodayData(DailyTableYOY.this);
+                //TodayDataUtils.updateTodayData(DailyTableYOY.this);
 
 
             };
+
 
 
             cardView.findViewById(R.id.btnEditExpected).setOnClickListener(v -> {
@@ -580,17 +582,16 @@ int HighPerGrowthPer=10;
 
                     expectedValue[0] = newExpected;
                     txtExpect.setText("Expected: ₹" + newVal);
-                    updateMetrics.run();
 
 
-
-                    // Rebalance other days
-                    rebalanceTargets(dateStr, delta);
-
-                 //   SharedPreferences.Editor editor = prefs.edit();
+                    //SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+                   // SharedPreferences.Editor editor = prefs.edit();
                     editor.putFloat("Expected_" + dateStr, expectedValue[0]);
+                    editor.putBoolean("edited_" + dateStr, true);
                     editor.apply();
 
+
+                    rebalanceTargets(dateStr, delta);
                 });
             });
 
@@ -605,6 +606,8 @@ int HighPerGrowthPer=10;
                 });
             });
 
+
+
             cardView.findViewById(R.id.btnEditQuantity).setOnClickListener(v -> {
                 showEditFieldDialog("Quantity", String.valueOf(quantityValue[0]), newVal -> {
                     quantityValue[0] = Integer.parseInt(newVal);
@@ -613,6 +616,7 @@ int HighPerGrowthPer=10;
                     updateMetrics.run();
                 });
             });
+
 
             cardView.findViewById(R.id.btnEditNOB).setOnClickListener(v -> {
                 showEditFieldDialog("NOB", String.valueOf(nobValue[0]), newVal -> {
@@ -624,16 +628,18 @@ int HighPerGrowthPer=10;
             });
 
 
+
+
             String todayStr = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Calendar.getInstance().getTime());
 
             if (dateStr.equals(todayStr)) {
-               // SharedPreferences.Editor editor = getSharedPreferences("TodayData", MODE_PRIVATE).edit();
+                // SharedPreferences.Editor editor = getSharedPreferences("TodayData", MODE_PRIVATE).edit();
                 editor.putString("today_expected", formattedDailyTarget);
                 editor.putInt("today_achieved", achieved);
                 editor.putString("today_type", type);
                 editor.putFloat("today_percent", percentage);
 
-                editor.putInt("today_abs", ABS);
+                editor.putInt("today_abs", (int) ABS);
                 editor.putFloat("today_atv", ATV);
                 editor.putFloat("today_asp", ASP);
 
@@ -645,22 +651,13 @@ int HighPerGrowthPer=10;
 
         }
 
-       // monthlyTarget = TurnOver / 12f;
+        shortMonth = sdf.format(startDate.getTime());
 
+        parts = getFinancialYear().split("_");
+        fyStartYear = Integer.parseInt(parts[0]);
+        dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
 
-        //SharedPreferences yoyPrefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
-
-// Get the short month name
-       // SimpleDateFormat sdf = new SimpleDateFormat("MMM", Locale.ENGLISH);
-         shortMonth = sdf.format(startDate.getTime());
-
-// Get the year for that month
-             parts = getFinancialYear().split("_");
-         fyStartYear = Integer.parseInt(parts[0]);
-         dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
-
-// Get updated monthly target
-         monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
+        monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
 
         Log.d("MonthlyTargetFromPrefs", "Month: " + shortMonth + " " + dataYear + " | Target: " + monthlyTarget);
 
@@ -681,7 +678,7 @@ int HighPerGrowthPer=10;
         this.dayTypesGlobal = new ArrayList<>(dayTypes);
 
 
-    //    InitializerRecentDays.cacheExpectedSums(this);
+        //    InitializerRecentDays.cacheExpectedSums(this);
 
 
 
@@ -728,7 +725,19 @@ int HighPerGrowthPer=10;
         int tableTop = startY + 40;
         int rowHeight = 35;
 
-        int[] columnWidths = {75, 75, 140, 60, 60, 70, 40, 40}; // Fixed the last column
+        //int[] columnWidths = {75, 75, 140, 60, 60, 70, 40, 40};
+        int tableWidth = pageWidth - 2 * startX;
+        int[] columnWidths = {
+                (int)(tableWidth * 0.14),
+                (int)(tableWidth * 0.14),
+                (int)(tableWidth * 0.20),
+                (int)(tableWidth * 0.10),
+                (int)(tableWidth * 0.10),
+                (int)(tableWidth * 0.12),
+                (int)(tableWidth * 0.10),
+                (int)(tableWidth * 0.10)
+        };
+
         String[] headers = {"Date", "Day", "Type", "Expect", "Ach", "Ach%", "Qty", "NOB"};
         int[] columnPositions = getColumnPositions(startX, columnWidths);
 
@@ -754,8 +763,8 @@ int HighPerGrowthPer=10;
         PdfDocument.Page page = document.startPage(pageInfo);
         Canvas canvas = page.getCanvas();
 
-        // Title
-        canvas.drawText("Monthly Performance Report", startX, startY, titlePaint);
+
+        canvas.drawText("Daily Report", startX, startY, titlePaint);
 
         int x, y = tableTop;
 
@@ -781,8 +790,15 @@ int HighPerGrowthPer=10;
             canvas.drawLine(pos, tableTop, pos, y, linePaint);
         }
 
+
+
         for (int i = 0; i < tableContainer.getChildCount(); i++) {
             View card = tableContainer.getChildAt(i);
+//            if (i % 2 == 0) {
+//                Paint rowBg = new Paint();
+//                rowBg.setColor(Color.parseColor("#f0f0f0"));
+//                canvas.drawRect(startX, y, pageWidth - startX, y + rowHeight, rowBg);
+//            }
 
             String date = ((TextView) card.findViewById(R.id.txtDate)).getText().toString().replace("Date: ", "");
             String day = ((TextView) card.findViewById(R.id.txtDay)).getText().toString().replace("Day: ", "");
@@ -793,14 +809,20 @@ int HighPerGrowthPer=10;
             String qty = ((TextView) card.findViewById(R.id.txtQuantity)).getText().toString().replace("Quantity: ", "");
             String nob = ((TextView) card.findViewById(R.id.txtNOB)).getText().toString().replace("NOB: ", "");
 
-            String[] rowData = {date, day, type, expected, achieved, percent + "%", qty, nob};
+            String[] rowData = {date, day, type, expected, achieved, percent, qty, nob};
 
             // Draw row data
             x = startX;
             for (int j = 0; j < rowData.length; j++) {
-                canvas.drawText(rowData[j], x + 5, y + 25, paint);
+                String display = rowData[j];
+                if (display.length() > 15) {
+                    display = display.substring(0, 13) + "...";
+                }
+
+                canvas.drawText(display, x + 5, y + 25, paint);
                 x += columnWidths[j];
             }
+
 
             y += rowHeight;
 
@@ -848,7 +870,7 @@ int HighPerGrowthPer=10;
 
         try {
             File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                    "MonthlyReport_" + System.currentTimeMillis() + ".pdf");
+                    "DailyReport_" + System.currentTimeMillis() + ".pdf");
 
             FileOutputStream out = new FileOutputStream(file);
             document.writeTo(out);
@@ -884,48 +906,67 @@ int HighPerGrowthPer=10;
         setResult(RESULT_OK, intent);
         finish();
     }
-
-
-
-
-
     private void rebalanceTargets(String editedDate, float delta) {
-        float totalMonthlyTarget = TurnOver;
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
 
-        // Find index of the edited date
-        int editedIndex = dateListGlobal.indexOf(editedDate);
-        if (editedIndex == -1) return;
-
-        // Calculate total weight of future days (excluding holidays)
-        float futureWeightSum = 0f;
-        for (int i = editedIndex + 1; i < dateListGlobal.size(); i++) {
-            String type = dayTypesGlobal.get(i);
-            if (type.equals("Holiday") || type.equals("Public Holiday")) continue;
-
-            futureWeightSum += originalWeights.get(i);
+        float monthlyTarget;
+        {
+            SharedPreferences yoyPrefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+            SimpleDateFormat sdf = new SimpleDateFormat("MMM", Locale.ENGLISH);
+            Calendar cal = Calendar.getInstance();
+            String shortMonth = sdf.format(cal.getTime());
+            String[] parts = getFinancialYear().split("_");
+            int fyStartYear = Integer.parseInt(parts[0]);
+            int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
+            monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
         }
 
-        if (futureWeightSum == 0f) return;
+        float totalEdited = 0f;
+        float totalEditableWeight = 0f;
 
-        SharedPreferences prefs=getSharedPreferences("Shop Data",MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        for (int i = editedIndex + 1; i < dateListGlobal.size(); i++) {
+        for (int i = 0; i < dateListGlobal.size(); i++) {
+            String dateKey = dateListGlobal.get(i);
             String type = dayTypesGlobal.get(i);
-            if (type.equals("Holiday") || type.equals("Public Holiday")) continue;
+            boolean isEdited = prefs.getBoolean("edited_" + dateKey, false);
+
+            if (isEdited) {
+                float editedVal = prefs.getFloat("Expected_" + dateKey, 0f);
+                totalEdited += editedVal;
+            } else if (!type.equals("Holiday") && !type.equals("Public Holiday")) {
+                totalEditableWeight += originalWeights.get(i);
+            }
+        }
+
+        float remainingTarget = monthlyTarget - totalEdited;
+
+        if (remainingTarget < 0f || totalEditableWeight == 0f) {
+            Log.e("RebalanceError", "Negative remaining target or no editable days left");
+            return;
+        }
+
+
+        for (int i = 0; i < dateListGlobal.size(); i++) {
+            String dateKey = dateListGlobal.get(i);
+            String type = dayTypesGlobal.get(i);
+            boolean isEdited = prefs.getBoolean("edited_" + dateKey, false);
+
+            if (isEdited || type.equals("Holiday") || type.equals("Public Holiday")) continue;
 
             float weight = originalWeights.get(i);
-            float adjustment = (weight / futureWeightSum) * (-delta);
+            float newExpected = (weight / totalEditableWeight) * remainingTarget;
+            newExpected = Math.max(0f, newExpected);
 
-            float updated = finalTargetsGlobal.get(i) + adjustment;
-            finalTargetsGlobal.set(i, updated);
+           // editor.putFloat("Expected_" + dateKey, newExpected);
+            editor.putFloat("Expected_" + dateKey, newExpected);
+            editor.putBoolean("edited_" + dateKey, false);
 
-            editor.putFloat("Expected_" + dateListGlobal.get(i), updated);
 
-            // Update UI and Achieved %
-            View card = tableContainer.getChildAt(i);
+
+            View card = findCardByDate(dateKey);
             if (card != null) {
                 TextView txtExpect = card.findViewById(R.id.txtExpect);
-                txtExpect.setText("Expected: ₹" + String.format("%.2f", updated));
+                txtExpect.setText("Expected: ₹" + String.format("%.2f", newExpected));
 
                 String achievedStr = ((TextView) card.findViewById(R.id.txtAchieved)).getText().toString().replace("Achieved: ₹", "").trim();
                 float achievedVal = 0f;
@@ -935,8 +976,7 @@ int HighPerGrowthPer=10;
                     Log.e("ParseError", "Invalid achieved value: " + achievedStr);
                 }
 
-                float percent = (updated != 0f) ? (achievedVal / updated) * 100f : 0f;
-
+                float percent = (newExpected != 0f) ? (achievedVal / newExpected) * 100f : 0f;
                 TextView txtAchievedPer = card.findViewById(R.id.txtAchievedPer);
                 txtAchievedPer.setText("Achieved %: " + String.format("%.2f%%", percent));
 
@@ -947,14 +987,32 @@ int HighPerGrowthPer=10;
                 } else {
                     txtAchievedPer.setTextColor(Color.parseColor("#F44336"));
                 }
-
-
-                editor.apply();
-
             }
-
         }
+
+        editor.apply();
     }
+
+
+
+    private View findCardByDate(String targetDate) {
+        for (int i = 0; i < tableContainer.getChildCount(); i++) {
+            View card = tableContainer.getChildAt(i);
+            TextView txtDate = card.findViewById(R.id.txtDate);
+            if (txtDate != null) {
+                String text = txtDate.getText().toString().trim();
+                String[] parts = text.split(":");
+                if (parts.length == 2) {
+                    String dateInCard = parts[1].trim();
+                    if (dateInCard.equals(targetDate)) {
+                        return card;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
 
     private float getExpectedSumForPastDays(int numDays) {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
@@ -976,25 +1034,6 @@ int HighPerGrowthPer=10;
         Log.d("ExpectedSum", numDays + " days total: ₹" + totalExpected);
         return totalExpected;
     }
-
-    private void clearOldExpectedValues(Calendar selectedMonth) {
-        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        Calendar cal = (Calendar) selectedMonth.clone();
-        int daysInMonth = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
-
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
-
-        for (int i = 1; i <= daysInMonth; i++) {
-            cal.set(Calendar.DAY_OF_MONTH, i);
-            String key = "Expected_" + sdf.format(cal.getTime());
-            editor.remove(key);
-        }
-
-        editor.apply();
-        Log.d("RESET_EXPECTED", "Old expected values cleared for selected month.");
-    }
-
     private String getFinancialYear() {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
@@ -1070,6 +1109,7 @@ int HighPerGrowthPer=10;
 
         return holidays;
     }
+
 
 
 

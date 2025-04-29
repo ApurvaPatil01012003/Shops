@@ -11,13 +11,13 @@
 
     <item
         android:id="@+id/Holi_High_Day"
-        android:title="Set Holiday/Highperformace day" />
+        android:title="Set Holiday/High Performance day" />
     <item
         android:id="@+id/Reset_Mpin"
         android:title="Reset Mpin" />
     <item
         android:id="@+id/Faq"
-        android:title="Faq" />
+        android:title="FAQ" />
 
 
     <item

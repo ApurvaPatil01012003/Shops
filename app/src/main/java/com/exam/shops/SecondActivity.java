@@ -53,7 +53,7 @@ public class SecondActivity extends AppCompatActivity {
         txtSecondTurnOver = findViewById(R.id.txtSecondTurnOver);
         txtSecondTurnOver.setText(getLastFinancialYear() + " TurnOver");
         EGFY = findViewById(R.id.EGFY);
-        EGFY.setText("Expected Growth FY"+ getCurrentFinancialYear()+"(%)");
+        EGFY.setText("Expected Growth "+ getCurrentFinancialYear());
         txtGrowthShow = findViewById(R.id.txtGrowthShow);
 
 
@@ -296,7 +296,7 @@ public class SecondActivity extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         // Log.d("Year","Current6 year" +year + ""+month);
 
-        year = year - 3;
+        year = year - 2;
         int startYear, endYear;
         if (month >= Calendar.APRIL) {
             startYear = year;
@@ -320,7 +320,7 @@ public class SecondActivity extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         // Log.d("Year","Current6 year" +year + ""+month);
 
-        year = year - 2;
+        year = year - 1;
         int startYear, endYear;
         if (month >= Calendar.APRIL) {
             startYear = year;
@@ -343,7 +343,7 @@ public class SecondActivity extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         // Log.d("Year","Current6 year" +year + ""+month);
 
-        year = year - 1;
+       // year = year - 0;
         int startYear, endYear;
         if (month >= Calendar.APRIL) {
             startYear = year;

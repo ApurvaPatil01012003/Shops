@@ -51,7 +51,7 @@ public class SetRevenueFigures extends AppCompatActivity {
 
         txtResetFirstTurnOver.setText("FY "+getSecondLastFinancialYear()+" Revenue");
         txtResetSecondTurnOver.setText("FY "+getLastFinancialYear()+" Revenue");
-        ResetEGFY.setText("Expected Growth FY "+getCurrentFinancialYear());
+        ResetEGFY.setText("Expected Growth "+getCurrentFinancialYear());
 
 
 
@@ -182,7 +182,7 @@ public class SetRevenueFigures extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         // Log.d("Year","Current6 year" +year + ""+month);
 
-        year = year - 3;
+        year = year - 2;
         int startYear, endYear;
         if (month >= Calendar.APRIL) {
             startYear = year;
@@ -206,7 +206,7 @@ public class SetRevenueFigures extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         // Log.d("Year","Current6 year" +year + ""+month);
 
-        year = year - 2;
+        year = year - 1;
         int startYear, endYear;
         if (month >= Calendar.APRIL) {
             startYear = year;
@@ -229,7 +229,7 @@ public class SetRevenueFigures extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         // Log.d("Year","Current6 year" +year + ""+month);
 
-        year = year - 1;
+        //year = year - 1;
         int startYear, endYear;
         if (month >= Calendar.APRIL) {
             startYear = year;
