@@ -73,7 +73,20 @@
                 android:fontFamily="sans-serif-medium"
                 android:padding="12dp"
                 android:layout_gravity="center" />
+            <TextView
+                android:id="@+id/txtReset"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reset"
+                android:textSize="18sp"
+                android:textColor="#2196F3"
+                android:layout_marginStart="260dp"
+                android:layout_marginTop="10dp"
+                />
         </LinearLayout>
+
+
+
     </androidx.cardview.widget.CardView>
 
 

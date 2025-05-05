@@ -1,5 +1,6 @@
 package com.exam.shops;
 
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.pdf.PdfDocument;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -34,12 +36,14 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -62,7 +66,8 @@ public class YOYActivity extends AppCompatActivity {
     );
     Map<String, Float> monthTargetMap = new HashMap<>();
 
-Button btnExportPdf;
+    Button btnExportPdf;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -72,7 +77,7 @@ Button btnExportPdf;
         tableLayout = findViewById(R.id.tableLayout);
         btnExportPdf = findViewById(R.id.btnExportPdf);
 
-       // Result = getIntent().getIntExtra("ResultTurnYear", 0);
+        // Result = getIntent().getIntExtra("ResultTurnYear", 0);
         Turnover = getIntent().getIntExtra("EdtGrowth", 0);
         txtTurnOver.setText("Yearly Target : " + String.valueOf(Turnover));
 
@@ -85,8 +90,6 @@ Button btnExportPdf;
         SharedPreferences sharedPref = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         // sharedPref.edit().putString("TurnOver", String.valueOf(Turnover)).apply();
         Turnover = getIntent().getIntExtra("EdtGrowth", sharedPref.getInt("EdtGrowth", 0));
-
-
 
 
         addMonthRows();
@@ -116,7 +119,7 @@ Button btnExportPdf;
                 intent.putExtra("TotalAchPer", percentOfYear);
                 HashMap<String, Float> monthTargetMapToPass = new HashMap<>(monthTargetMap);
                 intent.putExtra("month_target_map", monthTargetMapToPass);
-                Log.d("monthTargetMApToPass","Monthis :"+monthTargetMapToPass);
+                Log.d("monthTargetMApToPass", "Monthis :" + monthTargetMapToPass);
                 startActivity(intent);
                 finishAffinity();
             }
@@ -127,6 +130,7 @@ Button btnExportPdf;
 
         btnExportPdf.setOnClickListener(v -> generatePdfWithTable());
     }
+
     private void saveMonthTargetMap(HashMap<String, Float> monthTargetMap) {
         SharedPreferences sharedPrefs = getSharedPreferences("MyPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPrefs.edit();
@@ -147,7 +151,6 @@ Button btnExportPdf;
     }
 
 
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -157,6 +160,25 @@ Button btnExportPdf;
         tableLayout.removeAllViews();
         addMonthRows();
     }
+    private float getSafeFloat(SharedPreferences prefs, String key, float defaultValue) {
+        try {
+            return prefs.getFloat(key, defaultValue);
+        } catch (ClassCastException e) {
+            Object value = prefs.getAll().get(key);
+            if (value instanceof Integer) {
+                return ((Integer) value).floatValue();
+            } else if (value instanceof String) {
+                try {
+                    return Float.parseFloat((String) value);
+                } catch (NumberFormatException ex) {
+                    return defaultValue;
+                }
+            } else {
+                return defaultValue;
+            }
+        }
+    }
+
 
 
     private void addMonthRows() {
@@ -169,7 +191,8 @@ Button btnExportPdf;
             String shortMonth = convertToShortMonth(month);
             int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
 
-            float expected = prefs.getFloat("expected_" + shortMonth + "_" + dataYear, Turnover / 12.0f);
+           // float expected = prefs.getFloat("expected_" + shortMonth + "_" + dataYear, Turnover / 12.0f);
+            float expected = getSafeFloat(prefs, "expected_" + shortMonth + "_" + dataYear, Turnover / 12.0f);
             int achieved = prefs.getInt("data_" + shortMonth + "_" + dataYear + "_Achieved", 0);
             float percent = (expected != 0) ? (achieved / expected) * 100 : 0;
 
@@ -234,6 +257,7 @@ Button btnExportPdf;
 
 
     }
+
     private int getTotalAchievedInYear() {
         SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
         String[] parts = financialYear.split("_");
@@ -248,12 +272,11 @@ Button btnExportPdf;
             String key = "data_" + shortMonth + "_" + dataYear + "_Achieved";
             totalAchieved += prefs.getInt(key, 0);
         }
-        Log.d("TotalAchieved","Total Achived is :"+totalAchieved);
+        Log.d("TotalAchieved", "Total Achived is :" + totalAchieved);
         return totalAchieved;
 
 
     }
-
 
 
     private void showEditDialog(TextView targetView, String shortMonth, boolean isExpected) {
@@ -281,7 +304,9 @@ Button btnExportPdf;
             SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
             SharedPreferences.Editor editor = prefs.edit();
 
-            // Get financial year start from the `financialYear` string
+
+
+
             String[] parts = financialYear.split("_");
             int fyStartYear = Integer.parseInt(parts[0]);
             int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar"))
@@ -301,8 +326,6 @@ Button btnExportPdf;
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
     }
-
-
 
 
     private void showSingleEditDialog(TextView tvTarget, TextView tvAchieved, TextView tvPercentage,
@@ -348,7 +371,7 @@ Button btnExportPdf;
 
 
                 if (diff != 0) {
-                   // redistributeDifference(shortMonth, dataYear, diff);
+                    // redistributeDifference(shortMonth, dataYear, diff);
 
 
                 }
@@ -358,16 +381,15 @@ Button btnExportPdf;
                     monthTargetMap.clear();
                     tableLayout.removeAllViews();
                     addMonthRows();
-                }, 100); // small delay ensures sharedPrefs saved
-            }
-            else {
+                }, 100);
+            } else {
                 tvAchieved.setText("Achieved: ₹" + newValue);
                 editor.putInt("data_" + shortMonth + "_" + dataYear + "_Achieved", (int) newValueFloat);
             }
 
-           // editor.apply();
+            // editor.apply();
 
-           // editor.putFloat("expected_" + shortMonth + "_" + dataYear, newValueFloat);
+            // editor.putFloat("expected_" + shortMonth + "_" + dataYear, newValueFloat);
             editor.apply();
 
             updatePercentage(tvTarget, tvAchieved, tvPercentage, shortMonth, prefs);
@@ -392,9 +414,9 @@ Button btnExportPdf;
                 float percent = (achieved / expected) * 100;
                 percentText = String.format("%.2f%%", percent);
 
-                if (percent>=0 && percent < 70) {
+                if (percent >= 0 && percent < 70) {
                     colorResId = R.color.Green;
-                } else if (percent >=70 && percent < 90) {
+                } else if (percent >= 70 && percent < 90) {
                     colorResId = R.color.Black;
                 } else {
                     colorResId = R.color.Red;
@@ -414,8 +436,14 @@ Button btnExportPdf;
 
     private void addTextWatcher(TextView expectedView, TextView achievedView, TextView percentView, String shortMonth) {
         TextWatcher watcher = new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
             @Override
             public void afterTextChanged(Editable s) {
                 float expected = parseFloat(expectedView.getText().toString());
@@ -427,9 +455,9 @@ Button btnExportPdf;
                 if (expected != 0) {
                     float percent = (achieved / expected) * 100;
                     percentText = String.format("%.2f%%", percent);
-                    if (percent>=0 && percent < 70) {
+                    if (percent >= 0 && percent < 70) {
                         colorResId = R.color.Green;
-                    } else if (percent >=70 && percent < 90) {
+                    } else if (percent >= 70 && percent < 90) {
                         colorResId = R.color.Black;
                     } else {
                         colorResId = R.color.Red;
@@ -468,19 +496,32 @@ Button btnExportPdf;
 
     private String convertToShortMonth(String fullMonth) {
         switch (fullMonth) {
-            case "January": return "Jan";
-            case "February": return "Feb";
-            case "March": return "Mar";
-            case "April": return "Apr";
-            case "May": return "May";
-            case "June": return "Jun";
-            case "July": return "Jul";
-            case "August": return "Aug";
-            case "September": return "Sep";
-            case "October": return "Oct";
-            case "November": return "Nov";
-            case "December": return "Dec";
-            default: return fullMonth;
+            case "January":
+                return "Jan";
+            case "February":
+                return "Feb";
+            case "March":
+                return "Mar";
+            case "April":
+                return "Apr";
+            case "May":
+                return "May";
+            case "June":
+                return "Jun";
+            case "July":
+                return "Jul";
+            case "August":
+                return "Aug";
+            case "September":
+                return "Sep";
+            case "October":
+                return "Oct";
+            case "November":
+                return "Nov";
+            case "December":
+                return "Dec";
+            default:
+                return fullMonth;
         }
     }
 
@@ -542,8 +583,6 @@ Button btnExportPdf;
     }
 
 
-
-
     private void redistributeToUneditedMonths(String justEditedMonth, int justEditedYear) {
         SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -564,7 +603,9 @@ Button btnExportPdf;
                     : Integer.parseInt(financialYear.split("_")[0]);
 
             String fullKey = month + "_" + year;
-            float currentValue = prefs.getFloat("expected_" + fullKey, Turnover / 12f);
+            float currentValue = getSafeFloat(prefs, "expected_" + fullKey, Turnover / 12f);
+
+            //float currentValue = prefs.getFloat("expected_" + fullKey, Turnover / 12f);
             boolean isEdited = prefs.getBoolean("edited_" + fullKey, false);
 
             if (isEdited) {
@@ -594,26 +635,6 @@ Button btnExportPdf;
     }
 
 
-
-
-//    private List<String> getRemainingMonths(String currentShortMonth) {
-//        List<String> orderedMonths = Arrays.asList(
-//                "Apr", "May", "Jun", "Jul", "Aug", "Sep",
-//                "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"
-//        );
-//
-//        List<String> result = new ArrayList<>();
-//        boolean startCollecting = false;
-//
-//        for (String month : orderedMonths) {
-//            if (startCollecting) result.add(month);
-//            if (month.equals(currentShortMonth)) startCollecting = true;
-//        }
-//
-//        return result;
-//    }
-
-
     private Map<String, Float> getAllMonthlyExpectedValues() {
         SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
         Map<String, Float> monthData = new HashMap<>();
@@ -624,22 +645,45 @@ Button btnExportPdf;
         for (String month : months) {
             String shortMonth = convertToShortMonth(month);
             int year = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
-            float expected = prefs.getFloat("expected_" + shortMonth + "_" + year, Turnover / 12.0f);
+           // float expected = prefs.getFloat("expected_" + shortMonth + "_" + year, Turnover / 12.0f);
+            float expected = getSafeFloat(prefs, "expected_" + shortMonth + "_" + year, Turnover / 12.0f);
 
             monthData.put(month + " " + year, expected);
 
-            Log.d("MonthlyData","Month data is : "+month+" "+year+" "+expected);
+            Log.d("MonthlyData", "Month data is : " + month + " " + year + " " + expected);
         }
 
         return monthData;
 
     }
+
+    private float calculateLatestYearlyAchievedTotal() {
+        SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+        float total = 0f;
+
+        String[] parts = financialYear.split("_");
+        int fyStartYear = Integer.parseInt(parts[0]);
+
+        for (String month : months) {
+            String shortMonth = convertToShortMonth(month);
+            int year = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar"))
+                    ? fyStartYear + 1 : fyStartYear;
+
+            String key = "data_" + shortMonth + "_" + year + "_Achieved";
+            total += prefs.getInt(key, 0);
+        }
+
+        return total;
+    }
+
+
     private void generatePdfWithTable() {
         PdfDocument document = new PdfDocument();
         Paint paint = new Paint();
         Paint titlePaint = new Paint();
         Paint linePaint = new Paint();
         Paint headerPaint = new Paint();
+        Paint targetPaint = new Paint();
 
         int pageWidth = 595;
         int pageHeight = 842;
@@ -650,7 +694,7 @@ Button btnExportPdf;
         int rowHeight = 40;
         int tableWidth = pageWidth - 2 * margin;
 
-        int[] columnWidths = {tableWidth / 4, tableWidth / 4, tableWidth / 4, tableWidth / 4}; // 4 columns
+        int[] columnWidths = {tableWidth / 4, tableWidth / 4, tableWidth / 4, tableWidth / 4};
 
         titlePaint.setTypeface(Typeface.create(Typeface.DEFAULT_BOLD, Typeface.BOLD));
         titlePaint.setTextSize(20f);
@@ -670,6 +714,23 @@ Button btnExportPdf;
 
         // Draw title
         canvas.drawText("Monthly Report", margin, 60, titlePaint);
+
+
+        targetPaint.setTypeface(Typeface.create(Typeface.DEFAULT_BOLD, Typeface.BOLD));
+        targetPaint.setColor(Color.BLACK);
+        targetPaint.setTextSize(14f);
+        canvas.drawText("Yearly Target : " + Turnover, margin + 180, 60, targetPaint);
+
+
+        float latestAchieved = calculateLatestYearlyAchievedTotal();
+
+        DecimalFormat df = new DecimalFormat("#,##0");
+        String achievedText = "Monthly Achieved: ₹" + df.format(latestAchieved);
+        canvas.drawText("Achieved Target : ₹" + df.format(latestAchieved), margin + 360, 60, targetPaint);
+
+
+
+
 
         // Draw Header Background
         canvas.drawRect(tableStartX, tableStartY, tableStartX + tableWidth, tableStartY + rowHeight, headerPaint);
@@ -744,6 +805,21 @@ Button btnExportPdf;
             document.writeTo(out);
             document.close();
             out.close();
+            Uri pdfUri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".provider",
+                    file
+            );
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(pdfUri, "application/pdf");
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(this, "No PDF viewer installed", Toast.LENGTH_SHORT).show();
+            }
 
             Toast.makeText(this, "PDF Saved: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
 

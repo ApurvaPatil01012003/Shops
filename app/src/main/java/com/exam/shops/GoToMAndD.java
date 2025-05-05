@@ -1,8 +1,15 @@
 package com.exam.shops;
 
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,43 +20,26 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
-
+import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
-import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
-
-import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.LineChart;
-import com.github.mikephil.charting.charts.PieChart;
-import com.github.mikephil.charting.components.Description;
-import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.BarData;
-import com.github.mikephil.charting.data.BarDataSet;
-import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.data.PieData;
-import com.github.mikephil.charting.data.PieDataSet;
-import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
-import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.navigation.NavigationView;
-
-import org.json.JSONObject;
-
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -58,19 +48,23 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import android.Manifest;
+
 
 public class GoToMAndD extends AppCompatActivity {
     Button btnyes, btnDyes;
-
     TextView txtShopName, txtYearTarget, txtYearlyAch, YearlyAchPer, txtMonthTarget, MonthlyAch, MonthlyAchPer, txtTargetRecentdays, txtAchievedRecentdays, txtAchievedPerRecentdays;
     Spinner spinnerSR;
     LineChart lineChart, lineChartATV, lineChartASP;
     float monthlyTarget;
     int growth;
-
     DrawerLayout drawerLayout;
     NavigationView navigationView;
     ActionBarDrawerToggle toggle;
+    private List<String> publicHolidays;
+    private List<String> highPerfPreDays;
+    private String shopHoliday;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -116,6 +110,7 @@ public class GoToMAndD extends AppCompatActivity {
         drawerLayout = findViewById(R.id.drawer_layout);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
         ArrayAdapter<String> SR = new ArrayAdapter<>(
                 this,
@@ -260,7 +255,11 @@ public class GoToMAndD extends AppCompatActivity {
 
             startActivityForResult(i, 101);
 
+
+
         });
+
+
 
 
         toggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open_drawer, R.string.close_drawer);
@@ -274,7 +273,7 @@ public class GoToMAndD extends AppCompatActivity {
             navigationView.setNavigationItemSelectedListener(item -> {
                 int id = item.getItemId();
                 if (id == R.id.nav_home) {
-                    // Handle home
+
                 } else if (id == R.id.nav_tutorial) {
                     startActivity(new Intent(this, Tutorial.class));
                 } else if (id == R.id.Set_Rev_Fig) {
@@ -292,6 +291,23 @@ public class GoToMAndD extends AppCompatActivity {
                     Intent i = new Intent(GoToMAndD.this, FAQ.class);
                     startActivity(i);
                 }
+                else if(id == R.id.ExportFile)
+                {
+                    BackupHelper.exportBackup(GoToMAndD.this);
+                }
+                else if(id == R.id.ImportFile)
+                {
+                    Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    i.addCategory(Intent.CATEGORY_OPENABLE);
+                    i.setType("*/*");
+                    startActivityForResult(i, 123);
+
+                }else if(id == R.id.Calender)
+                {
+                    Intent i = new Intent(GoToMAndD.this,CalendarDays.class);
+                    startActivity(i);
+                }
+
                 drawerLayout.closeDrawer(GravityCompat.START);
                 return true;
             });
@@ -299,6 +315,42 @@ public class GoToMAndD extends AppCompatActivity {
             Log.e("GoToMAndD", "NavigationView not found!");
         }
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                            != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+                return;
+            }
+
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    "daily_notify",
+                    "Daily Notifications",
+                    NotificationManager.IMPORTANCE_DEFAULT
+            );
+            channel.setSound(null, null);
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel);
+        }
+
+
+
+
+
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+        String todayKey = sdf.format(Calendar.getInstance().getTime());
+
+        scheduleDailyNotification();
+        //SharedPreferences sharedPref = getSharedPreferences("shop_data", MODE_PRIVATE);
+        shopHoliday = sharedPref.getString("Shop_Holiday", "");
+        publicHolidays = HolidayUtils.loadHolidayDates(this);
+        highPerfPreDays = HolidayUtils.getPreHolidayHighPerformanceDates(publicHolidays, shopHoliday);
+        Log.d("Publicdays","IS : "+publicHolidays);
+        Log.d("Publicdays","IS : "+highPerfPreDays);
 
     }
 
@@ -382,6 +434,22 @@ public class GoToMAndD extends AppCompatActivity {
                 Log.d("GoToMAndD", "Data updated from DailyTableYOY → via YOYSecondActivity");
             }
         }
+
+        if (requestCode == 123 && resultCode == RESULT_OK && data != null) {
+            Uri uri = data.getData();
+            if (uri != null) {
+                BackupHelper.importBackup(this, uri);
+            } else {
+                Toast.makeText(this, "No file selected", Toast.LENGTH_SHORT).show();
+            }
+
+
+
+
+    }
+
+
+
     }
 
     private void updateCurrentMonthAchieved() {
@@ -399,7 +467,9 @@ public class GoToMAndD extends AppCompatActivity {
         String key = "data_" + currentMonth + "_" + dataYear + "_Achieved";
         int achieved = prefs.getInt(key, 0);
 
-        monthlyTarget = prefs.getFloat("expected_" + currentMonth + "_" + dataYear, growth / 12f);
+        //monthlyTarget = prefs.getFloat("expected_" + currentMonth + "_" + dataYear, growth / 12f);
+        monthlyTarget = getSafeFloat(prefs, "expected_" + currentMonth + "_" + dataYear, growth / 12f);
+
         float percent = (monthlyTarget > 0) ? (achieved * 100f / monthlyTarget) : 0f;
 
         MonthlyAch.setText("₹ " + achieved);
@@ -609,6 +679,27 @@ public class GoToMAndD extends AppCompatActivity {
         Log.d("GoToActivity", "ABS: " + abs + " | ATV: " + atv + " | ASP: " + asp);
     }
 
+    private float getSafeFloat(SharedPreferences prefs, String key, float defaultValue) {
+        try {
+            return prefs.getFloat(key, defaultValue);
+        } catch (ClassCastException e) {
+            try {
+                Object value = prefs.getAll().get(key);
+                if (value instanceof Integer) {
+                    return ((Integer) value).floatValue();
+                } else if (value instanceof String) {
+                    return Float.parseFloat((String) value);
+                } else if (value instanceof Float) {
+                    return (Float) value;
+                } else {
+                    return defaultValue;
+                }
+            } catch (Exception ex) {
+                return defaultValue;
+            }
+        }
+    }
+
 
     private float getExpectedSumForPastDays(int daysBack) {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
@@ -621,7 +712,11 @@ public class GoToMAndD extends AppCompatActivity {
             cal.add(Calendar.DAY_OF_MONTH, -1);
             String dateStr = keyFormat.format(cal.getTime());
 
-            float expected = prefs.getFloat("Expected_" + dateStr, -1f);
+          //float expected = prefs.getFloat("Expected_" + dateStr, -1f);
+            float expected = getSafeFloat(prefs, "Expected_" + dateStr, -1f);
+
+
+
             if (expected >= 0) {
                 total += expected;
             }
@@ -632,6 +727,9 @@ public class GoToMAndD extends AppCompatActivity {
         Log.d("ExpectedSum", daysBack + " days total: ₹" + total);
         return total;
     }
+
+
+
 
 
     private Map<String, Float> getUpdatedMonthlyTargetsFromPrefs(int yearlyGrowth) {
@@ -653,7 +751,8 @@ public class GoToMAndD extends AppCompatActivity {
                     : fyStartYear;
 
             String key = "expected_" + month + "_" + year;
-            float target = prefs.getFloat(key, -1f);
+           //float target = prefs.getFloat(key, -1f);
+           float target = getSafeFloat(prefs, key, -1f);
 
             if (target == -1f) {
                 target = defaultPerMonth;
@@ -673,5 +772,65 @@ public class GoToMAndD extends AppCompatActivity {
         return (month >= Calendar.APRIL) ? year : (year - 1);
     }
 
+
+
+
+    private void scheduleDailyNotification() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        Calendar dailyCalendar = Calendar.getInstance();
+        dailyCalendar.set(Calendar.HOUR_OF_DAY, 17);
+        dailyCalendar.set(Calendar.MINUTE, 57);
+        dailyCalendar.set(Calendar.SECOND, 0);
+        dailyCalendar.set(Calendar.MILLISECOND, 0);
+
+        if (dailyCalendar.getTimeInMillis() <= System.currentTimeMillis()) {
+            dailyCalendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        Intent dailyIntent = new Intent(this, NotificationReceiver.class);
+        dailyIntent.setAction("DAILY_NOTIFICATION");
+        PendingIntent dailyPendingIntent = PendingIntent.getBroadcast(
+                this,
+                0,
+                dailyIntent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        if (alarmManager != null) {
+            alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    dailyCalendar.getTimeInMillis(),
+                    dailyPendingIntent
+            );
+        }
+
+
+        Calendar noonCalendar = Calendar.getInstance();
+        noonCalendar.set(Calendar.HOUR_OF_DAY, 15);
+        noonCalendar.set(Calendar.MINUTE, 57);
+        noonCalendar.set(Calendar.SECOND, 0);
+        noonCalendar.set(Calendar.MILLISECOND, 0);
+
+        if (noonCalendar.getTimeInMillis() <= System.currentTimeMillis()) {
+            noonCalendar.add(Calendar.DAY_OF_YEAR, 1);
+        }
+
+        Intent noonIntent = new Intent(this, NotificationReceiver.class);
+        noonIntent.setAction("CHECK_DATA_FILLED");
+        PendingIntent noonPendingIntent = PendingIntent.getBroadcast(
+                this,
+                1,
+                noonIntent,
+                PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
+
+        if (alarmManager != null) {
+            alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    noonCalendar.getTimeInMillis(),
+                    noonPendingIntent
+            );
+        }
+    }
 
 }

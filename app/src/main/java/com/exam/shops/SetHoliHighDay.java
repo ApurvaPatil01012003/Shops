@@ -3,6 +3,7 @@ package com.exam.shops;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -84,6 +85,7 @@ public class SetHoliHighDay extends AppCompatActivity {
             editor.putString("Shop_Holiday", shopHolidays);
             editor.putString("selected_days", HighPerformDays);
             editor.apply();
+            Log.d("SetHoliHighDay", "Saved selected_days: " + HighPerformDays);
 
             Toast.makeText(this, "Reset Successfully", Toast.LENGTH_SHORT).show();
 

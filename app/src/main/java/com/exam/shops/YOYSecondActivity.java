@@ -119,43 +119,6 @@ public class YOYSecondActivity extends AppCompatActivity {
         });
 
 
-
-//        datePicker.addOnPositiveButtonClickListener(selection -> {
-//            et_date.setText(datePicker.getHeaderText());
-//
-//            SharedPreferences sharedPreferences = getSharedPreferences("Shop Data", MODE_PRIVATE);
-//
-//            SimpleDateFormat inputFormat = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
-//            SimpleDateFormat saveFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
-//
-//            String formattedDate = "";
-//            Calendar selectedCalendar = Calendar.getInstance();
-//
-//            try {
-//                Date selectedDate = inputFormat.parse(datePicker.getHeaderText());
-//                formattedDate = saveFormat.format(selectedDate);
-//
-//                selectedCalendar.setTime(selectedDate);
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//
-//            String expectedKey = "Expected_" + formattedDate;
-//
-//
-//            refreshDailyTargetsForCurrentMonth(selectedCalendar);
-//
-//            float expectedTarget = sharedPreferences.getFloat(expectedKey, -1f);
-//
-//            if (expectedTarget >= 0f) {
-//                txtDailyTarget.setText("Daily target : ₹" + String.format("%.2f", expectedTarget));
-//            } else {
-//                txtDailyTarget.setText("Daily target : ₹0");
-//
-//            }
-//        });
-
-
         datePicker.addOnPositiveButtonClickListener(selection -> {
             et_date.setText(datePicker.getHeaderText());
 
@@ -305,7 +268,9 @@ public class YOYSecondActivity extends AppCompatActivity {
                 intent.putExtra("MonthlyTarget", Result / 12f);
                 intent.putExtra("MonthlyAchieved", updatedValueDaily);
                 SharedPreferences todayPrefs = getSharedPreferences("TodayData", MODE_PRIVATE);
-                float percent = todayPrefs.getFloat("today_percent", 0f);
+               // float percent = todayPrefs.getFloat("today_percent", 0f);
+                float percent = getSafeFloat(todayPrefs, "today_percent", 0f);
+
                 intent.putExtra("MonthlyAchievedPercent", percent);
 
                 if (key != null && !key.isEmpty()) {
@@ -668,7 +633,9 @@ public class YOYSecondActivity extends AppCompatActivity {
 
 
         String monthKey = "last_month_target_" + month + "_" + year;
-        float lastSavedTarget = yoyPrefs.getFloat(monthKey, -1f);
+       // float lastSavedTarget = yoyPrefs.getFloat(monthKey, -1f);
+        float lastSavedTarget = getSafeFloat(yoyPrefs, monthKey, -1f);
+
         String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
         String monthName = monthNames[month];
         float currentMonthTarget = monthTargetMap.getOrDefault(monthName + "_" + year, MonthTarget);
@@ -748,6 +715,24 @@ public class YOYSecondActivity extends AppCompatActivity {
     }
 
 
+    private float getSafeFloat(SharedPreferences prefs, String key, float defaultValue) {
+        try {
+            return prefs.getFloat(key, defaultValue);
+        } catch (ClassCastException e) {
+            Object value = prefs.getAll().get(key);
+            if (value instanceof Integer) {
+                return ((Integer) value).floatValue();
+            } else if (value instanceof String) {
+                try {
+                    return Float.parseFloat((String) value);
+                } catch (NumberFormatException ex) {
+                    return defaultValue;
+                }
+            } else {
+                return defaultValue;
+            }
+        }
+    }
 
 
 

@@ -30,7 +30,14 @@
         android:id="@+id/Contact"
         android:title="Contact" />
 
-
-
+    <item
+        android:id="@+id/ExportFile"
+        android:title="Export Data"/>
+    <item
+        android:id="@+id/ImportFile"
+        android:title="Import Data" />
+    <item
+        android:id="@+id/Calender"
+        android:title="Calender" />
 
 </menu>

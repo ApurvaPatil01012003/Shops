@@ -14,5 +14,4 @@
         android:layout_height="2000dp"
         android:src="@drawable/mybiztracker" />
 
-
 </LinearLayout>

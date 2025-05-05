@@ -1,13 +1,9 @@
 package com.exam.shops;
 
-import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
-import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -18,9 +14,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.text.InputType;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -31,11 +25,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -48,13 +39,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -63,11 +52,6 @@ public class DailyTableYOY extends AppCompatActivity {
     Spinner spinnerMonth;
     LinearLayout tableContainer;
     String Holiday;
-    TextView txtTurnOver;
-    //int SecondTurnOverValue;
-    // int Result;
-    //float MonthlyTarget;
-
     int achievedValue;
     int quantities;
     int nobValue;
@@ -79,7 +63,10 @@ public class DailyTableYOY extends AppCompatActivity {
     float monthlyAchievedTotal = 0f;
 
     float monthlyAchievedPercent = 0f;
-    int HighPerGrowthPer=10;
+    int HighPerGrowthPer = 10;
+    float monthlyTarget;
+    int existing;
+    int delta;
 
 //    Map<String, String> publicHolidayMap = new HashMap<String, String>() {{
 //        put("April", "14-04-2025");
@@ -105,7 +92,6 @@ public class DailyTableYOY extends AppCompatActivity {
     private List<String> dayTypesGlobal;
 
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -126,10 +112,7 @@ public class DailyTableYOY extends AppCompatActivity {
 
 
         Holiday = getIntent().getStringExtra("ShopHoliday");
-        //  Result = getIntent().getIntExtra("ResultTurnYear", 0);
-        //  MonthlyTarget = getIntent().getFloatExtra("MonthlyTarget",0f);
-        //Log.d("Monthly","MonthlyTarget is Daily  : "+MonthlyTarget);
-        // SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
+        ;
         achievedValue = getIntent().getIntExtra("Achived_Value", 0);
         quantities = getIntent().getIntExtra("Quantity", 0);
         nobValue = getIntent().getIntExtra("NOB", 0);
@@ -143,7 +126,7 @@ public class DailyTableYOY extends AppCompatActivity {
 
         //publicHolidayMap = loadPublicHolidaysFromJson();
 
-        publicHolidayList=loadHolidayDates();
+        publicHolidayList = loadHolidayDates();
 
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, getFincialYearMonths());
@@ -168,7 +151,7 @@ public class DailyTableYOY extends AppCompatActivity {
                     selectedMonth.set(Calendar.YEAR, year);
                     selectedMonth.set(Calendar.MONTH, monthIndex);
                     selectedMonth.set(Calendar.DAY_OF_MONTH, 1);
-                   // clearOldExpectedValues(selectedMonth);
+                    // clearOldExpectedValues(selectedMonth);
 
 
                     generateDateRows(selectedMonth);
@@ -194,6 +177,11 @@ public class DailyTableYOY extends AppCompatActivity {
             }
 
         });
+
+
+        SharedPreferences sharedPreferences = getSharedPreferences("shop_data", MODE_PRIVATE);
+        Holiday = sharedPreferences.getString("Shop_Holiday", "");
+        highPerDay = sharedPreferences.getString("selected_days", "");
 
 
     }
@@ -263,10 +251,30 @@ public class DailyTableYOY extends AppCompatActivity {
         }
     }
 
+    private float getSafeFloat(SharedPreferences prefs, String key, float defaultValue) {
+        try {
+            return prefs.getFloat(key, defaultValue);  // Try reading as float directly
+        } catch (ClassCastException e) {
+            try {
+                Object value = prefs.getAll().get(key);  // Fallback: get raw value
+                if (value instanceof Integer) {
+                    return ((Integer) value).floatValue();  // Convert Integer to float
+                } else if (value instanceof String) {
+                    return Float.parseFloat((String) value);  // Parse String to float
+                } else if (value instanceof Float) {
+                    return (Float) value;
+                } else {
+                    return defaultValue;  // Unknown type
+                }
+            } catch (Exception ex) {
+                return defaultValue;  // On any other failure
+            }
+        }
+    }
+
     private void generateDateRows(Calendar startDate) {
         tableContainer.removeAllViews();
         monthlyAchievedTotal = 0f;
-
 
 
         int year = startDate.get(Calendar.YEAR);
@@ -312,7 +320,8 @@ public class DailyTableYOY extends AppCompatActivity {
         int dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
 
 // Get updated monthly target
-        float monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
+        //  monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
+        monthlyTarget = getSafeFloat(yoyPrefs, "expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
 
         Log.d("MonthlyTargetFromPrefs", "Month: " + shortMonth + " " + dataYear + " | Target: " + monthlyTarget);
 
@@ -411,7 +420,6 @@ public class DailyTableYOY extends AppCompatActivity {
         List<Boolean> isUserEdited = new ArrayList<>();
 
 
-
         SharedPreferences.Editor editor = prefs.edit();
         for (int i = 0; i < rawTargets.size(); i++) {
             String dateKey = dateList.get(i);
@@ -442,7 +450,6 @@ public class DailyTableYOY extends AppCompatActivity {
         }
 
 
-
         float remainingTarget = monthlyTarget - totalEditedTarget;
         float autoScaling = (totalAutoTargetWeight > 0) ? (remainingTarget / totalAutoTargetWeight) : 0f;
 
@@ -452,7 +459,6 @@ public class DailyTableYOY extends AppCompatActivity {
                 finalTargets.set(i, adjusted);
             }
         }
-
 
 
         // Debug: Sum check
@@ -471,6 +477,7 @@ public class DailyTableYOY extends AppCompatActivity {
 
 
             float savedExpected = prefs.getFloat("Expected_" + dateStr, -1f);
+
             if (savedExpected >= 0) {
                 targetForDay = savedExpected;
             }
@@ -488,7 +495,7 @@ public class DailyTableYOY extends AppCompatActivity {
             if (!prefs.contains("Expected_" + dateStr)) {
                 editor.putFloat("Expected_" + dateStr, targetForDay);
                 editor.apply();
-                Log.d("DayTarget","DAILY TARGET : "+dateStr+"  "+targetForDay);
+                Log.d("DayTarget", "DAILY TARGET : " + dateStr + "  " + targetForDay);
             }
 
 
@@ -567,11 +574,7 @@ public class DailyTableYOY extends AppCompatActivity {
                 }
 
 
-                //TodayDataUtils.updateTodayData(DailyTableYOY.this);
-
-
             };
-
 
 
             cardView.findViewById(R.id.btnEditExpected).setOnClickListener(v -> {
@@ -585,7 +588,7 @@ public class DailyTableYOY extends AppCompatActivity {
 
 
                     //SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
-                   // SharedPreferences.Editor editor = prefs.edit();
+                    // SharedPreferences.Editor editor = prefs.edit();
                     editor.putFloat("Expected_" + dateStr, expectedValue[0]);
                     editor.putBoolean("edited_" + dateStr, true);
                     editor.apply();
@@ -596,16 +599,40 @@ public class DailyTableYOY extends AppCompatActivity {
             });
 
 
-
+            String finalShortMonth = shortMonth;
             cardView.findViewById(R.id.btnEditAchieved).setOnClickListener(v -> {
                 showEditFieldDialog("Achieved", String.valueOf(achievedValue[0]), newVal -> {
-                    achievedValue[0] = Integer.parseInt(newVal);
+                    int newAchieved = Integer.parseInt(newVal);
+                    int oldAchieved = prefs.getInt("Achieved_" + dateStr, 0);
+                    int delta = newAchieved - oldAchieved;
+
+                    // Save updated daily value
+                    achievedValue[0] = newAchieved;
                     txtAchieved.setText("Achieved: ₹" + newVal);
-                    prefs.edit().putInt("Achieved_" + dateStr, achievedValue[0]).apply();
+                    prefs.edit().putInt("Achieved_" + dateStr, newAchieved).apply();
+
+                    try {
+                        Date parsedDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).parse(dateStr);
+                        SimpleDateFormat sdfMonth = new SimpleDateFormat("MMM", Locale.ENGLISH);
+                        SimpleDateFormat sdfYear = new SimpleDateFormat("yyyy", Locale.ENGLISH);
+
+                        String monthStr = sdfMonth.format(parsedDate);
+                        String yearStr = sdfYear.format(parsedDate);
+                        String key = "data_" + monthStr + "_" + yearStr + "_Achieved";
+
+                        // SharedPreferences yoyPrefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+                        int existing = yoyPrefs.getInt(key, 0);
+                        yoyPrefs.edit().putInt(key, existing + delta).apply();
+
+                        Log.d("MonthlyUpdate", "Updated " + key + " from " + existing + " to " + (existing + delta));
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
                     updateMetrics.run();
                 });
             });
-
 
 
             cardView.findViewById(R.id.btnEditQuantity).setOnClickListener(v -> {
@@ -628,12 +655,10 @@ public class DailyTableYOY extends AppCompatActivity {
             });
 
 
-
-
             String todayStr = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Calendar.getInstance().getTime());
 
             if (dateStr.equals(todayStr)) {
-                // SharedPreferences.Editor editor = getSharedPreferences("TodayData", MODE_PRIVATE).edit();
+
                 editor.putString("today_expected", formattedDailyTarget);
                 editor.putInt("today_achieved", achieved);
                 editor.putString("today_type", type);
@@ -657,30 +682,22 @@ public class DailyTableYOY extends AppCompatActivity {
         fyStartYear = Integer.parseInt(parts[0]);
         dataYear = (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) ? fyStartYear + 1 : fyStartYear;
 
-        monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
+        // monthlyTarget = yoyPrefs.getFloat("expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
+        getSafeFloat(prefs, "Expected_" + shortMonth + "_" + dataYear, TurnOver / 12f);
 
         Log.d("MonthlyTargetFromPrefs", "Month: " + shortMonth + " " + dataYear + " | Target: " + monthlyTarget);
-
-
-
-
         monthlyAchievedPercent = (monthlyTarget != 0) ? (monthlyAchievedTotal * 100f / monthlyTarget) : 0f;
 
         Log.d("MonthlySummary", "Achieved: " + monthlyAchievedTotal + " | Percent: " + monthlyAchievedPercent);
 
-        // Add at the end of generateDateRows()
-        List<Float> originalWeights = new ArrayList<>(rawTargets);  // Keep original weights
+
+        List<Float> originalWeights = new ArrayList<>(rawTargets);
 
 
         this.originalWeights = originalWeights;
         this.dateListGlobal = new ArrayList<>(dateList);
         this.finalTargetsGlobal = new ArrayList<>(finalTargets);
         this.dayTypesGlobal = new ArrayList<>(dayTypes);
-
-
-        //    InitializerRecentDays.cacheExpectedSums(this);
-
-
 
 
     }
@@ -713,32 +730,40 @@ public class DailyTableYOY extends AppCompatActivity {
         builder.show();
     }
 
+    private float calculateLatestMonthlyAchievedTotal() {
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        float sum = 0f;
+        for (String date : dateListGlobal) {
+            sum += prefs.getInt("Achieved_" + date, 0);
+        }
+        return sum;
+    }
 
     private void generatePDF() {
         PdfDocument document = new PdfDocument();
-
         int pageWidth = 595;
         int pageHeight = 842;
-
         int startX = 20;
         int startY = 50;
         int tableTop = startY + 40;
         int rowHeight = 35;
 
+
         //int[] columnWidths = {75, 75, 140, 60, 60, 70, 40, 40};
         int tableWidth = pageWidth - 2 * startX;
         int[] columnWidths = {
-                (int)(tableWidth * 0.14),
-                (int)(tableWidth * 0.14),
-                (int)(tableWidth * 0.20),
-                (int)(tableWidth * 0.10),
-                (int)(tableWidth * 0.10),
-                (int)(tableWidth * 0.12),
-                (int)(tableWidth * 0.10),
-                (int)(tableWidth * 0.10)
+                (int) (tableWidth * 0.14),
+                (int) (tableWidth * 0.12),
+                (int) (tableWidth * 0.12),
+                (int) (tableWidth * 0.12),
+                (int) (tableWidth * 0.10),
+                (int) (tableWidth * 0.10),
+                (int) (tableWidth * 0.10),
+                (int) (tableWidth * 0.10)
+                , (int) (tableWidth * 0.10)
         };
 
-        String[] headers = {"Date", "Day", "Type", "Expect", "Ach", "Ach%", "Qty", "NOB"};
+        String[] headers = {"Date", "Expect", "Ach", "Ach%", "Qty", "NOB", "ABS", "ATV", "ASP"};
         int[] columnPositions = getColumnPositions(startX, columnWidths);
 
         Paint paint = new Paint();
@@ -749,7 +774,7 @@ public class DailyTableYOY extends AppCompatActivity {
         boldPaint.setTypeface(Typeface.create(Typeface.DEFAULT, Typeface.BOLD));
 
         Paint titlePaint = new Paint(boldPaint);
-        titlePaint.setTextSize(16f);
+        titlePaint.setTextSize(20f);
 
         Paint linePaint = new Paint();
         linePaint.setColor(Color.BLACK);
@@ -758,6 +783,11 @@ public class DailyTableYOY extends AppCompatActivity {
         Paint headerBgPaint = new Paint();
         headerBgPaint.setColor(Color.LTGRAY);
 
+        Paint TApaint = new Paint(boldPaint);
+        TApaint.setTextSize(14f);
+        TApaint.setColor(Color.BLACK);
+
+
         int pageNum = 1;
         PdfDocument.PageInfo pageInfo = new PdfDocument.PageInfo.Builder(pageWidth, pageHeight, pageNum).create();
         PdfDocument.Page page = document.startPage(pageInfo);
@@ -765,6 +795,16 @@ public class DailyTableYOY extends AppCompatActivity {
 
 
         canvas.drawText("Daily Report", startX, startY, titlePaint);
+
+        float latestAchieved = calculateLatestMonthlyAchievedTotal();
+
+        DecimalFormat df = new DecimalFormat("#,##0");
+        String targetText = "Monthly Target: ₹" + df.format(monthlyTarget);
+        String achievedText = "Monthly Achieved: ₹" + df.format(latestAchieved);
+        float targetTextWidth = paint.measureText(targetText);
+        canvas.drawText(targetText, startX + 180, startY, TApaint);
+        canvas.drawText(achievedText, (startX + 180) + targetTextWidth + 40f, startY, TApaint);
+
 
         int x, y = tableTop;
 
@@ -791,7 +831,6 @@ public class DailyTableYOY extends AppCompatActivity {
         }
 
 
-
         for (int i = 0; i < tableContainer.getChildCount(); i++) {
             View card = tableContainer.getChildAt(i);
 //            if (i % 2 == 0) {
@@ -801,15 +840,18 @@ public class DailyTableYOY extends AppCompatActivity {
 //            }
 
             String date = ((TextView) card.findViewById(R.id.txtDate)).getText().toString().replace("Date: ", "");
-            String day = ((TextView) card.findViewById(R.id.txtDay)).getText().toString().replace("Day: ", "");
-            String type = ((TextView) card.findViewById(R.id.txtType)).getText().toString().replace("Type: ", "");
+//            String day = ((TextView) card.findViewById(R.id.txtDay)).getText().toString().replace("Day: ", "");
+//            String type = ((TextView) card.findViewById(R.id.txtType)).getText().toString().replace("Type: ", "");
             String expected = ((TextView) card.findViewById(R.id.txtExpect)).getText().toString().replace("Expected: ", "");
             String achieved = ((TextView) card.findViewById(R.id.txtAchieved)).getText().toString().replace("Achieved: ", "");
             String percent = ((TextView) card.findViewById(R.id.txtAchievedPer)).getText().toString().replace("Achieved %: ", "").replace("%", "");
             String qty = ((TextView) card.findViewById(R.id.txtQuantity)).getText().toString().replace("Quantity: ", "");
             String nob = ((TextView) card.findViewById(R.id.txtNOB)).getText().toString().replace("NOB: ", "");
+            String abs = ((TextView) card.findViewById(R.id.txtABS)).getText().toString().replace("ABS: ", "");
+            String atv = ((TextView) card.findViewById(R.id.txtATV)).getText().toString().replace("ATV: ", "");
+            String asp = ((TextView) card.findViewById(R.id.txtASP)).getText().toString().replace("ASP: ", "");
 
-            String[] rowData = {date, day, type, expected, achieved, percent, qty, nob};
+            String[] rowData = {date, expected, achieved, percent, qty, nob, abs, atv, asp};
 
             // Draw row data
             x = startX;
@@ -879,6 +921,24 @@ public class DailyTableYOY extends AppCompatActivity {
 
             Toast.makeText(this, "PDF saved: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
 
+            // Open the generated PDF
+            Uri pdfUri = FileProvider.getUriForFile(
+                    this,
+                    getPackageName() + ".provider", // This must match the authority in your manifest
+                    file
+            );
+
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setDataAndType(pdfUri, "application/pdf");
+            intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                Toast.makeText(this, "No PDF viewer installed", Toast.LENGTH_SHORT).show();
+            }
+
+
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, "Error writing PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -906,6 +966,7 @@ public class DailyTableYOY extends AppCompatActivity {
         setResult(RESULT_OK, intent);
         finish();
     }
+
     private void rebalanceTargets(String editedDate, float delta) {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -957,10 +1018,9 @@ public class DailyTableYOY extends AppCompatActivity {
             float newExpected = (weight / totalEditableWeight) * remainingTarget;
             newExpected = Math.max(0f, newExpected);
 
-           // editor.putFloat("Expected_" + dateKey, newExpected);
+            // editor.putFloat("Expected_" + dateKey, newExpected);
             editor.putFloat("Expected_" + dateKey, newExpected);
             editor.putBoolean("edited_" + dateKey, false);
-
 
 
             View card = findCardByDate(dateKey);
@@ -994,7 +1054,6 @@ public class DailyTableYOY extends AppCompatActivity {
     }
 
 
-
     private View findCardByDate(String targetDate) {
         for (int i = 0; i < tableContainer.getChildCount(); i++) {
             View card = tableContainer.getChildAt(i);
@@ -1024,7 +1083,20 @@ public class DailyTableYOY extends AppCompatActivity {
         for (int i = 1; i <= numDays; i++) {
             cal.add(Calendar.DAY_OF_MONTH, -1);
             String dateKey = sdf.format(cal.getTime());
-            float expected = prefs.getFloat("Expected_" + dateKey, -1f);
+            //float expected = prefs.getFloat("Expected_" + dateKey, -1f);
+
+            float expected = -1f;
+            try {
+                expected = prefs.getFloat("Expected_" + dateKey, -1f);
+            } catch (ClassCastException e) {
+                // If it was saved as a String, convert it to float
+                try {
+                    String val = prefs.getString("Expected_" + dateKey, "-1");
+                    expected = Float.parseFloat(val);
+                } catch (Exception ex) {
+                    expected = -1f; // fallback
+                }
+            }
 
             if (expected >= 0f) {
                 totalExpected += expected;
@@ -1034,6 +1106,7 @@ public class DailyTableYOY extends AppCompatActivity {
         Log.d("ExpectedSum", numDays + " days total: ₹" + totalExpected);
         return totalExpected;
     }
+
     private String getFinancialYear() {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
@@ -1109,8 +1182,6 @@ public class DailyTableYOY extends AppCompatActivity {
 
         return holidays;
     }
-
-
 
 
 }

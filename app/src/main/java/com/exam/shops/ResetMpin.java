@@ -34,6 +34,14 @@ public class ResetMpin extends AppCompatActivity {
         etResetConfirmPin= findViewById(R.id.etResetConfirmPin);
         btnResetNextPin = findViewById(R.id.btnResetNextPin);
 
+        SharedPreferences sharedPreferences = getSharedPreferences("shop_data", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("mpin_reset_done", true); // <-- this is the key
+        editor.apply();
+
+        boolean getFlag = getIntent().getBooleanExtra("Flag",true);
+
+
         btnResetNextPin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -64,9 +72,21 @@ public class ResetMpin extends AppCompatActivity {
                 editor.putString("confirmMpin",confirmPin);
                 editor.apply();
 
-                Toast.makeText(ResetMpin.this, "Reset Successfully", Toast.LENGTH_SHORT).show();
-                Log.d("Mpin","Mpin is : "+pin);
-                Log.d("Mpin","confirmPin is : "+confirmPin);
+                boolean fromResetClick = sharedPreferences.getBoolean("from_reset_click", false);
+                if (fromResetClick) {
+
+                    editor.putBoolean("from_reset_click", false);
+                    editor.apply();
+                    Toast.makeText(ResetMpin.this, "Reset Successfully", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(ResetMpin.this, MpinLogin.class);
+                    startActivity(intent);
+                    finish();
+                } else {
+
+                    Toast.makeText(ResetMpin.this, "Reset Successfully", Toast.LENGTH_SHORT).show();
+
+                }
 
             }
         });
