@@ -1,7 +1,6 @@
 package com.exam.shops;
 
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Canvas;
@@ -18,9 +17,7 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.view.GestureDetector;
 import android.view.Gravity;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -77,18 +74,13 @@ public class YOYActivity extends AppCompatActivity {
         tableLayout = findViewById(R.id.tableLayout);
         btnExportPdf = findViewById(R.id.btnExportPdf);
 
-        // Result = getIntent().getIntExtra("ResultTurnYear", 0);
         Turnover = getIntent().getIntExtra("EdtGrowth", 0);
         txtTurnOver.setText("Yearly Target : " + String.valueOf(Turnover));
 
-        // Turnover = getIntent().getIntExtra("TurnYear", 0);
         financialYear = getCurrentFinancialYear();
-
-        // txtTurnOver.setText("Yearly Target : "+String.valueOf(Turnover));
 
 
         SharedPreferences sharedPref = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-        // sharedPref.edit().putString("TurnOver", String.valueOf(Turnover)).apply();
         Turnover = getIntent().getIntExtra("EdtGrowth", sharedPref.getInt("EdtGrowth", 0));
 
 
@@ -195,7 +187,7 @@ public class YOYActivity extends AppCompatActivity {
             float expected = getSafeFloat(prefs, "expected_" + shortMonth + "_" + dataYear, Turnover / 12.0f);
             int achieved = prefs.getInt("data_" + shortMonth + "_" + dataYear + "_Achieved", 0);
             float percent = (expected != 0) ? (achieved / expected) * 100 : 0;
-
+float loss = expected - achieved;
             // CardView
             CardView cardView = new CardView(this);
             CardView.LayoutParams cardParams = new CardView.LayoutParams(
@@ -238,6 +230,35 @@ public class YOYActivity extends AppCompatActivity {
             layout.addView(tvPercentage);
 
             updatePercentage(tvTarget, tvAchieved, tvPercentage, shortMonth, prefs);
+
+            LinearLayout horizontalLayout = new LinearLayout(this);
+            horizontalLayout.setOrientation(LinearLayout.HORIZONTAL);
+            horizontalLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            horizontalLayout.setPadding(4, 4, 4, 4);
+
+            LinearLayout.LayoutParams textParams = new LinearLayout.LayoutParams(0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
+            TextView tvLoss = createText("Loss: ₹" + String.format("%.0f", loss), 14, Typeface.NORMAL);
+            tvLoss.setLayoutParams(textParams);
+
+            LinearLayout.LayoutParams buttonParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            buttonParams.setMargins(16, 0, 0, 0); // margin between text and button
+
+            Button btnDistribute = new Button(this);
+            btnDistribute.setText("Distribute");
+            btnDistribute.setTextColor(Color.WHITE);
+            btnDistribute.setLayoutParams(buttonParams);
+            btnDistribute.setBackgroundColor(Color.parseColor("#007BFF"));
+            btnDistribute.setOnClickListener(v -> showDistributeDialog(loss, shortMonth, dataYear, tvLoss));
+
+            horizontalLayout.addView(tvLoss);
+            horizontalLayout.addView(btnDistribute);
+
+            layout.addView(horizontalLayout);
 
 
             cardView.addView(layout);
@@ -828,6 +849,134 @@ public class YOYActivity extends AppCompatActivity {
             Toast.makeText(this, "Error saving PDF: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
+
+
+    private void showDistributeDialog(float loss, String month, int year, TextView tvLoss) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Distribute Loss");
+        builder.setMessage("How many months you want to distribute loss");
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(input);
+
+        builder.setPositiveButton("Distribute", (dialog, which) -> {
+            int monthsToDistribute;
+            try {
+                monthsToDistribute = Integer.parseInt(input.getText().toString().trim());
+                if (monthsToDistribute <= 0) {
+                    throw new NumberFormatException("Months must be positive");
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Invalid number of months", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            distributeLossAcrossMonths(loss, month, year, monthsToDistribute);
+            tvLoss.setText("Loss: ₹0");
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+    private void distributeLossAcrossMonths(float loss, String startMonth, int startYear, int months) {
+        SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+
+        List<String> orderedMonths = Arrays.asList(
+                "Apr", "May", "Jun", "Jul", "Aug", "Sep",
+                "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"
+        );
+
+        int startIndex = orderedMonths.indexOf(startMonth);
+        float lossPerMonth = loss / months;
+
+        // Subtract the total loss from the start month
+        String startKey = "expected_" + startMonth + "_" + startYear;
+        float currentExpected = getSafeFloat(prefs, startKey, Turnover / 12.0f);
+        float newExpected = Math.max(0, currentExpected - loss);
+
+        editor.putFloat(startKey, newExpected);
+        editor.apply();
+
+        // Update the UI for the loss month immediately
+        updateMonthUI(startMonth, startYear, newExpected);
+
+        // Distribute loss to the next months
+        for (int i = 1; i <= months; i++) {
+            int nextIndex = (startIndex + i) % orderedMonths.size();
+            String nextMonth = orderedMonths.get(nextIndex);
+            int nextYear = (nextMonth.equals("Jan") || nextMonth.equals("Feb") || nextMonth.equals("Mar")) ? startYear + 1 : startYear;
+
+            String nextKey = "expected_" + nextMonth + "_" + nextYear;
+            float nextExpected = getSafeFloat(prefs, nextKey, Turnover / 12.0f);
+            float updatedExpected = nextExpected + lossPerMonth;
+
+            editor.putFloat(nextKey, updatedExpected);
+            editor.apply();
+
+            // Update the UI for the distributed month immediately
+            updateMonthUI(nextMonth, nextYear, updatedExpected);
+
+            Log.d("LossDistribution", "Distributed to " + nextMonth + " " + nextYear + " | Updated Expected: " + updatedExpected);
+        }
+
+        Toast.makeText(this, "Loss distributed over " + months + " months", Toast.LENGTH_SHORT).show();
+        addMonthRows(); // Refresh the entire UI
+    }
+
+
+    private void updateMonthUI(String month, int year, float newExpected) {
+        for (int i = 0; i < tableLayout.getChildCount(); i++) {
+            View card = tableLayout.getChildAt(i);
+
+            if (card instanceof CardView) {
+                CardView cardView = (CardView) card;
+                LinearLayout layout = (LinearLayout) cardView.getChildAt(0);
+
+                // Iterate through the children of the layout to find the TextView with month data
+                for (int j = 0; j < layout.getChildCount(); j++) {
+                    View view = layout.getChildAt(j);
+
+                    if (view instanceof TextView) {
+                        TextView monthView = (TextView) view;
+                        String monthText = monthView.getText().toString().replace("Month: ", "").trim();
+
+                        // If this is the correct month, find the "Target" text view
+                        if (monthText.contains(month)) {
+                            // Loop through the children to find the target TextView within the layout
+                            for (int k = j + 1; k < layout.getChildCount(); k++) {
+                                View nextView = layout.getChildAt(k);
+
+                                if (nextView instanceof LinearLayout) {
+                                    LinearLayout targetRow = (LinearLayout) nextView;
+
+                                    // Look for the TextView within this LinearLayout
+                                    for (int l = 0; l < targetRow.getChildCount(); l++) {
+                                        View targetChild = targetRow.getChildAt(l);
+
+                                        if (targetChild instanceof TextView) {
+                                            TextView expectedView = (TextView) targetChild;
+
+                                            // Check if this TextView contains "Target" text
+                                            if (expectedView.getText().toString().contains("Target:")) {
+                                                String expectedText = "Target: ₹" + String.format("%.0f", newExpected);
+                                                expectedView.setText(expectedText);
+                                                Log.d("UpdateMonthUI", "Updated " + month + " " + year + " to " + expectedText);
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
 
 
 }

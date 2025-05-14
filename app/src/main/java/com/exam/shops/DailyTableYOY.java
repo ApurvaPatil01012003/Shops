@@ -68,6 +68,9 @@ public class DailyTableYOY extends AppCompatActivity {
     int existing;
     int delta;
 
+    SharedPreferences prefs;
+    float lossAmount;
+
 //    Map<String, String> publicHolidayMap = new HashMap<String, String>() {{
 //        put("April", "14-04-2025");
 //        put("May", "01-05-2025");
@@ -105,14 +108,13 @@ public class DailyTableYOY extends AppCompatActivity {
             return insets;
         });
 
-
+        prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
         spinnerMonth = findViewById(R.id.spinnerMonth);
         tableContainer = findViewById(R.id.tableContainer);
         btnCPDF = findViewById(R.id.btnCPDF);
 
 
         Holiday = getIntent().getStringExtra("ShopHoliday");
-        ;
         achievedValue = getIntent().getIntExtra("Achived_Value", 0);
         quantities = getIntent().getIntExtra("Quantity", 0);
         nobValue = getIntent().getIntExtra("NOB", 0);
@@ -155,6 +157,8 @@ public class DailyTableYOY extends AppCompatActivity {
 
 
                     generateDateRows(selectedMonth);
+
+
                     getExpectedSumForPastDays(15);
                     getExpectedSumForPastDays(7);
 
@@ -382,6 +386,7 @@ public class DailyTableYOY extends AppCompatActivity {
             String dayStr = dayFormat.format(cal.getTime());
             dateList.add(dateStr);
 
+
             String type;
             float rawTarget;
 
@@ -484,6 +489,12 @@ public class DailyTableYOY extends AppCompatActivity {
             String formattedDailyTarget = String.format("%.2f", targetForDay);
 
 
+
+// Save the updated value to SharedPreferences after loading
+            editor.putFloat("Expected_" + dateStr, targetForDay);
+            editor.apply();
+
+
             //  SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
             achieved = prefs.getInt("Achieved_" + dateStr, 0);
             monthlyAchievedTotal += achieved;
@@ -506,8 +517,6 @@ public class DailyTableYOY extends AppCompatActivity {
             float ASP = (quantity != 0) ? (float) achieved / quantity : 0;
             float percentage = (targetForDay != 0) ? (achieved / targetForDay) * 100f : 0f;
 
-
-            // Inflate card view
             View cardView = getLayoutInflater().inflate(R.layout.card_daily_info, null);
 
             ((TextView) cardView.findViewById(R.id.txtDate)).setText("Date: " + dateStr);
@@ -521,6 +530,9 @@ public class DailyTableYOY extends AppCompatActivity {
             ((TextView) cardView.findViewById(R.id.txtABS)).setText("ABS: " + String.format(Locale.US, "%.2f", ABS));
             ((TextView) cardView.findViewById(R.id.txtATV)).setText("ATV: " + String.format(Locale.US, "%.2f", ATV));
             ((TextView) cardView.findViewById(R.id.txtASP)).setText("ASP: " + String.format(Locale.US, "%.2f", ASP));
+            float Loss = Float.parseFloat(formattedDailyTarget) - achieved;
+            ((TextView) cardView.findViewById(R.id.txtLoss)).setText("Loss: " + String.format(Locale.US, "%.2f", Loss));
+
 
             LinearLayout detailsLayout = cardView.findViewById(R.id.detailsLayout);
 
@@ -546,6 +558,7 @@ public class DailyTableYOY extends AppCompatActivity {
             TextView txtABS = cardView.findViewById(R.id.txtABS);
             TextView txtATV = cardView.findViewById(R.id.txtATV);
             TextView txtASP = cardView.findViewById(R.id.txtASP);
+            TextView txtLoss = cardView.findViewById(R.id.txtLoss);
 
             Runnable updateMetrics = () -> {
                 int achieved = achievedValue[0];
@@ -557,13 +570,14 @@ public class DailyTableYOY extends AppCompatActivity {
                 float atv = (nob != 0) ? (float) achieved / nob : 0f;
                 float asp = (qty != 0) ? (float) achieved / qty : 0f;
                 float abs = (nob != 0) ? (float) qty / nob : 0;
-
+                float loss = expected - achieved;
                 txtAchievedPer.setText(String.format("Achieved %%: %.2f%%", percent));
                 txtABS.setText("ABS: " + String.format(Locale.US, "%.2f", abs));
 
                 txtATV.setText("ATV: " + String.format(Locale.US, "%.2f", atv));
                 txtASP.setText("ASP: " + String.format(Locale.US, "%.2f", asp));
-
+               // txtLoss.setText("Loss: "+String.format(Locale.US,"%.2f",loss));
+                txtLoss.setText(String.format(Locale.US, "%.2f", loss));
 
                 if (percent < 70) {
                     txtAchievedPer.setTextColor(Color.parseColor("#4CAF50"));
@@ -604,6 +618,7 @@ public class DailyTableYOY extends AppCompatActivity {
                 showEditFieldDialog("Achieved", String.valueOf(achievedValue[0]), newVal -> {
                     int newAchieved = Integer.parseInt(newVal);
                     int oldAchieved = prefs.getInt("Achieved_" + dateStr, 0);
+
                     int delta = newAchieved - oldAchieved;
 
                     // Save updated daily value
@@ -653,6 +668,16 @@ public class DailyTableYOY extends AppCompatActivity {
                     updateMetrics.run();
                 });
             });
+
+            cardView.findViewById(R.id.btnLoss).setOnClickListener(v -> {
+                showDistributeLossDialog(cardView);
+            });
+
+
+
+
+
+
 
 
             String todayStr = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Calendar.getInstance().getTime());
@@ -1182,6 +1207,233 @@ public class DailyTableYOY extends AppCompatActivity {
 
         return holidays;
     }
+
+
+    private void showDistributeLossDialog(View cardView) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Distribute Loss");
+        builder.setMessage("Enter the number of working days to distribute the loss:");
+
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
+        builder.setView(input);
+
+        builder.setPositiveButton("Distribute", (dialog, which) -> {
+            int days = Integer.parseInt(input.getText().toString().trim());
+            if (days <= 0) {
+                Toast.makeText(this, "Number of days must be greater than zero", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            distributeLossAcrossDays(days, cardView);
+
+
+        });
+
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        builder.show();
+    }
+
+
+//    private void distributeLossAcrossDays(int days, View cardView) {
+//        TextView txtLoss = cardView.findViewById(R.id.txtLoss);
+//        String lossText = txtLoss.getText().toString().replace("Loss:", "").trim();
+//
+//        try {
+//            lossAmount = Float.parseFloat(lossText);
+//        } catch (NumberFormatException e) {
+//            Toast.makeText(this, "Invalid loss value", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        if (lossAmount <= 0) {
+//            Toast.makeText(this, "No loss to distribute", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        // Calculate the per day loss amount
+//        float lossPerDay = lossAmount / days;
+//        int count = 0;
+//
+//        // Get the date from the cardView where the loss was calculated
+//        TextView txtDate = cardView.findViewById(R.id.txtDate);
+//        String lossDateText = txtDate.getText().toString().replace("Date: ", "").trim();
+//        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+//
+//        Calendar cal = Calendar.getInstance();
+//        try {
+//            Date lossDate = dateFormat.parse(lossDateText);
+//            cal.setTime(lossDate);
+//            // Move to the next day after the loss date
+//            cal.add(Calendar.DAY_OF_MONTH, 1);
+//
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            Toast.makeText(this, "Invalid loss date format", Toast.LENGTH_SHORT).show();
+//            return;
+//        }
+//
+//        List<String> publicHolidays = loadHolidayDates();
+//        Log.d("LossDistribution", "Total Loss: " + lossAmount + " | Per Day Loss: " + lossPerDay);
+//
+//        SharedPreferences.Editor editor = prefs.edit(); // Start the editor
+//
+//        while (count < days) {
+//            String dateStr = String.format(Locale.getDefault(), "%02d-%02d-%d",
+//                    cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.YEAR));
+//            String dayStr = cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault());
+//
+//            Log.d("LossDistribution", "Checking date: " + dateStr + " (" + dayStr + ")");
+//
+//            // Check if the current day is a valid working day (not a holiday or public holiday)
+//            if (isWorkingDay(dayStr, dateStr, publicHolidays,Holiday)) {
+//                float currentTarget = prefs.getFloat("Expected_" + dateStr, 0f);
+//                float newTarget = currentTarget + lossPerDay;
+//
+//                Log.d("hhhh","is : "+publicHolidays);
+//                // Save updated target to SharedPreferences
+//                editor.putFloat("Expected_" + dateStr, newTarget);
+//                editor.putBoolean("edited_" + dateStr, true);  // Mark as edited to ensure it stays
+//                editor.apply();
+//
+//                // Update the UI immediately
+//                View targetCard = findCardByDate(dateStr);
+//                if (targetCard != null) {
+//                    TextView txtExpect = targetCard.findViewById(R.id.txtExpect);
+//                    txtExpect.setText("Expected: ₹" + String.format(Locale.US, "%.2f", newTarget));
+//                }
+//
+//                Log.d("LossDistribution", "Distributed to: " + dateStr + " | New Target: " + newTarget);
+//                count++;
+//            } else {
+//                Log.d("LossDistribution", "Skipping holiday: " + dateStr + " (" + dayStr + ")");
+//            }
+//
+//
+//            cal.add(Calendar.DAY_OF_MONTH, 1);
+//        }
+//
+//       // txtLoss.setText("Loss = 0");
+//        prefs.edit().putFloat("last_loss", 0f).apply();
+//        Toast.makeText(this, "Loss distributed over " + days + " working days", Toast.LENGTH_SHORT).show();
+//
+//    }
+
+    private void distributeLossAcrossDays(int days, View cardView) {
+        TextView txtLoss = cardView.findViewById(R.id.txtLoss);
+        String lossText = txtLoss.getText().toString().replace("Loss:", "").trim();
+
+        try {
+            lossAmount = Float.parseFloat(lossText);
+        } catch (NumberFormatException e) {
+            Toast.makeText(this, "Invalid loss value", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (lossAmount <= 0) {
+            Toast.makeText(this, "No loss to distribute", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Calculate the per day loss amount
+        float lossPerDay = lossAmount / days;
+        int count = 0;
+
+        // Get the date from the cardView where the loss was calculated
+        TextView txtDate = cardView.findViewById(R.id.txtDate);
+        String lossDateText = txtDate.getText().toString().replace("Date: ", "").trim();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+
+        Calendar cal = Calendar.getInstance();
+        try {
+            Date lossDate = dateFormat.parse(lossDateText);
+            cal.setTime(lossDate);
+
+            // Subtract the loss from the expected value of the day the loss is calculated
+            float currentExpected = prefs.getFloat("Expected_" + lossDateText, 0f);
+            float adjustedExpected = Math.max(0, currentExpected - lossAmount);  // Ensure no negative value
+
+
+            prefs.edit().putFloat("Expected_" + lossDateText, adjustedExpected).apply();
+
+
+
+            // Update the UI for the loss day
+            View lossDayCard = findCardByDate(lossDateText);
+            if (lossDayCard != null) {
+                TextView txtExpect = lossDayCard.findViewById(R.id.txtExpect);
+                txtExpect.setText("Expected: " + String.format(Locale.US, "%.2f", adjustedExpected));
+            }
+
+            Log.d("LossDistribution", "Adjusted expected for loss day: " + lossDateText + " | New Expected: " + adjustedExpected);
+
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Invalid loss date format", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        List<String> publicHolidays = loadHolidayDates();
+        Log.d("LossDistribution", "Total Loss: " + lossAmount + " | Per Day Loss: " + lossPerDay);
+
+        SharedPreferences.Editor editor = prefs.edit();
+
+        while (count < days) {
+            String dateStr = String.format(Locale.getDefault(), "%02d-%02d-%d",
+                    cal.get(Calendar.DAY_OF_MONTH), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.YEAR));
+            String dayStr = cal.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault());
+
+            Log.d("LossDistribution", "Checking date: " + dateStr + " (" + dayStr + ")");
+
+            if (isWorkingDay(dayStr, dateStr, publicHolidays, Holiday)) {
+                float currentTarget = prefs.getFloat("Expected_" + dateStr, 0f);
+                float newTarget = currentTarget + lossPerDay;
+
+                Log.d("LossDistribution", "Updated Target: " + newTarget);
+
+                editor.putFloat("Expected_" + dateStr, newTarget);
+                editor.putBoolean("edited_" + dateStr, true);  // Mark as edited to ensure it stays
+                editor.apply();
+
+                // Update the UI immediately
+                View targetCard = findCardByDate(dateStr);
+                if (targetCard != null) {
+                    TextView txtExpect = targetCard.findViewById(R.id.txtExpect);
+                    txtExpect.setText("Expected: ₹" + String.format(Locale.US, "%.2f", newTarget));
+                }
+
+                Log.d("LossDistribution", "Distributed to: " + dateStr + " | New Target: " + newTarget);
+                count++;
+            } else {
+                Log.d("LossDistribution", "Skipping holiday: " + dateStr + " (" + dayStr + ")");
+            }
+
+            // Move to the next day
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+        }
+        txtLoss.setText("Loss = 0");
+        prefs.edit().putFloat("last_loss", 0f).apply();
+        Toast.makeText(this, "Loss distributed over " + days + " working days", Toast.LENGTH_SHORT).show();
+    }
+
+
+
+
+    private boolean isWorkingDay(String day, String date, List<String> publicHolidays, String shopHoliday) {
+        if (prefs == null) {
+            prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        }
+
+        // Check if the current day is a holiday or public holiday
+        if (day.equalsIgnoreCase(shopHoliday) || publicHolidays.contains(date)) {
+            Log.d("LossDistribution", "Skipping non-working day: " + date + " (" + day + ")");
+            return false;
+        }
+
+        return true;
+    }
+
 
 
 }

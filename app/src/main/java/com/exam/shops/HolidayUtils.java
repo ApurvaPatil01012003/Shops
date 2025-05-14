@@ -4,10 +4,8 @@ package com.exam.shops;
 
 import android.content.Context;
 import android.util.Log;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.*;

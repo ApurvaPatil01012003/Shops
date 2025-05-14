@@ -225,8 +225,41 @@
                     android:gravity="center"
                     android:text="ASP: 000" />
             </LinearLayout>
-        </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
+                android:padding="8dp">
 
+                <!-- Loss Text -->
+                <TextView
+                    android:id="@+id/txtLoss"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Loss: ₹0"
+                    android:textSize="16sp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="8dp" />
+
+                <!-- Distribute Loss Button -->
+                <Button
+                    android:id="@+id/btnLoss"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#007BFF"
+                    android:text="Distribute Loss"
+                    android:textColor="#FFFFFF"
+                    android:paddingVertical="6dp"
+                    android:paddingHorizontal="12dp"
+                    android:gravity="center" />
+            </LinearLayout>
+
+
+
+        </LinearLayout>
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>
