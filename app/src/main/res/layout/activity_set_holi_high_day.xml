@@ -1,91 +1,76 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F4F6FA"
-    android:id="@+id/main"
     android:gravity="center"
     android:padding="24dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="80dp"
-        android:orientation="vertical">
+        android:background="#FFFFFF"
+        android:orientation="vertical"
+        android:padding="24dp">
 
         <ImageView
-            android:id="@+id/ivLogo"
-            android:layout_width="200dp"
-            android:layout_height="120dp"
-            android:src="@drawable/mybiztracker"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp"
-            android:contentDescription="App Logo" />
-
-
-        <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            card_view:cardElevation="4dp"
-            card_view:cardCornerRadius="16dp">
+            android:src="@drawable/high_holi_day" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="24dp"
-                android:background="#FFFFFF">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Shop holiday"
+            android:textColor="#000000"
+            android:textSize="18sp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Shop Holiday"
-                    android:textSize="16sp"
-                    android:textColor="#000000"
-                    android:layout_marginTop="16dp" />
+        <Spinner
+            android:id="@+id/ResetspinnerShopHoli"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:background="@drawable/edittext_background"
+            android:padding="16dp"
+            android:textColor="#000000" />
 
-                <Spinner
-                    android:id="@+id/ResetspinnerShopHoli"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textColor="#000000"
-                    android:background="@drawable/edittext_background"
-                    android:padding="16dp"
-                    android:layout_marginTop="4dp" />
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="High Performance Days"
-                    android:textSize="16sp"
-                    android:textColor="#000000"
-                    android:layout_marginTop="16dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="25dp"
+            android:text="High performance days"
+            android:textColor="#000000"
+            android:textSize="18sp" />
+        <EditText
+            android:id="@+id/edtResetHighPerDays"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/edittext_background"
+            android:clickable="true"
+            android:drawableEnd="@drawable/baseline_arrow_drop_down_24"
+            android:focusable="false"
+            android:hint="Select days"
+            android:padding="12dp"
+            android:textColor="#000000"
+            android:textSize="16sp" />
 
-                <EditText
-                    android:id="@+id/edtResetHighPerDays"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Select Days"
-                    android:textColor="#000000"
-                    android:textSize="16sp"
-                    android:focusable="false"
-                    android:padding="12dp"
-                    android:clickable="true"
-                    android:background="@drawable/edittext_background"
-                    android:drawableEnd="@drawable/baseline_arrow_drop_down_24" />
-
-                <Button
-                    android:id="@+id/btnReset"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Reset"
-                    android:textAllCaps="true"
-                    android:layout_marginTop="24dp"
-                    android:backgroundTint="#007BFF"
-                    android:textColor="#FFFFFF"
-                    android:fontFamily="sans-serif-medium"
-                    android:padding="12dp" />
-            </LinearLayout>
-        </androidx.cardview.widget.CardView>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnReset"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="160dp"
+            android:layout_marginBottom="20dp"
+            android:backgroundTint="#002B73"
+            android:padding="20dp"
+            android:text="Reset"
+            android:textAllCaps="false"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            app:cornerRadius="12dp" />
     </LinearLayout>
 </ScrollView>

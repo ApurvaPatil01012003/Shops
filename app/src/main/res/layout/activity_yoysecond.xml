@@ -1,161 +1,211 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#F5F5F5"
-    android:gravity="center"
-    android:padding="16dp">
+    android:orientation="vertical">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_horizontal"
-        android:orientation="vertical">
-
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginBottom="16dp"
-            android:text="Daily Data Entry"
-            android:textColor="#121112"
-            android:textSize="22sp"
-            android:textStyle="bold" />
+        android:layout_height="match_parent"
+        android:padding="20dp"
+        android:scrollbars="none"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_card"
-            android:elevation="4dp"
-            android:orientation="vertical"
-            android:padding="20dp">
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/txtDailyTarget"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="4dp"
-                android:gravity="center"
-                android:textColor="#000000"
-                android:textSize="16sp" />
-
+                android:text="Add Todays Performance"
+                android:textColor="#121112"
+                android:textSize="34sp"
+                android:textStyle="bold" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Date"
+                android:layout_margin="10dp"
+                android:text="Enter your achieved sales , quantity sold, and bills to stay on track"
                 android:textColor="#000000"
-                android:textSize="16sp" />
+                android:textSize="18sp" />
 
-
-            <EditText
-                android:id="@+id/et_date"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/edittext_background"
-                android:clickable="true"
-                android:focusable="false"
-                android:hint="Select Date"
-                android:inputType="none"
-                android:padding="12dp"
-                android:textColor="#000000" />
+                android:elevation="4dp"
+                android:orientation="vertical"
+                android:padding="20dp">
 
+                <TextView
+                    android:id="@+id/txtDailyTarget"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Achieved"
-                android:textColor="#000000"
-                android:textSize="16sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Date"
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
 
-            <EditText
-                android:id="@+id/edtAchieved"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/edittext_background"
-                android:hint="Enter Achieved"
-                android:inputType="numberDecimal"
-                android:padding="12dp"
-                android:textColor="#000000"
-                android:textSize="16sp" />
+                <EditText
+                    android:id="@+id/et_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_edittext_rounded"
+                    android:clickable="true"
+                    android:focusable="false"
+                    android:hint="Select Date"
+                    android:layout_marginTop="2dp"
+                    android:inputType="none"
+                    android:padding="12dp"
+                    android:textColor="#000000" />
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Today's sale"
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="Quantity"
-                android:textColor="#000000"
-                android:textSize="16sp" />
+                <EditText
+                    android:id="@+id/edtAchieved"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/edittext_background"
+                    android:hint="Enter Today's sale"
+                    android:inputType="numberDecimal"
+                    android:padding="12dp"
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
 
-            <EditText
-                android:id="@+id/edtQty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/edittext_background"
-                android:hint="Enter Quantity"
-                android:inputType="numberDecimal"
-                android:padding="12dp"
-                android:textColor="#000000"
-                android:textSize="16sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Quantity sold"
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="NOB"
-                android:textColor="#000000"
-                android:textSize="16sp" />
+                <EditText
+                    android:id="@+id/edtQty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/edittext_background"
+                    android:hint="Enter quantity sold"
+                    android:inputType="numberDecimal"
+                    android:padding="12dp"
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
 
-            <EditText
-                android:id="@+id/edtNob"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/edittext_background"
-                android:hint="Enter No Of Bills"
-                android:inputType="numberDecimal"
-                android:padding="12dp"
-                android:textColor="#000000"
-                android:textSize="16sp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="No. of bills"
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
 
-            <Button
-                android:id="@+id/btnSave"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="32dp"
-                android:backgroundTint="#196C92"
-                android:padding="14dp"
-                android:text="Save"
-                android:textAllCaps="false"
-                android:textColor="#fff"
-                android:textSize="16sp" />
+                <EditText
+                    android:id="@+id/edtNob"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/edittext_background"
+                    android:hint="Enter number of bills"
+                    android:inputType="numberDecimal"
+                    android:padding="12dp"
+                    android:textColor="#000000"
+                    android:textSize="16sp" />
 
-            <Button
-                android:id="@+id/btnDailyTable"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="32dp"
-                android:backgroundTint="#196C92"
-                android:padding="14dp"
-                android:text="Daily DSR"
-                android:textAllCaps="false"
-                android:textColor="#fff"
-                android:textSize="16sp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSave"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="20dp"
+                    android:text="Save"
+                    android:padding="20dp"
+                    android:textAllCaps="false"
+                    android:textSize="16sp"
+                    style="@style/Widget.MaterialComponents.Button"
+                    app:cornerRadius="12dp"
+                    android:backgroundTint="#002B73"
+                    android:textColor="@android:color/white"/>
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDailyTable"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginBottom="20dp"
+                    android:text="Daily DSR"
+                    android:padding="20dp"
+                    android:textAllCaps="false"
+                    android:textSize="16sp"
+                    style="@style/Widget.MaterialComponents.Button"
+                    app:cornerRadius="12dp"
+                    android:backgroundTint="#002B73"
+                    android:textColor="@android:color/white"/>
+                <!-- Previous Entries Section -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textColor="#000000"
+                            android:textSize="16sp"
+                            android:text="Previous entries"/>
+
+                        <TextView
+                            android:id="@+id/btnViewAll"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="#D55229"
+                            android:textSize="16sp"
+                            android:text="View All >"/>
+
+                    </LinearLayout>
+                    <TextView
+                        android:id="@+id/txtNoData"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Not save any entry yet"
+                        android:visibility="gone"/>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recyclerRecentEntries"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:padding="16dp"/>
+                </LinearLayout>
+
+            </LinearLayout>
         </LinearLayout>
-
-
-    </LinearLayout>
-
+    </ScrollView>
 
 </LinearLayout>

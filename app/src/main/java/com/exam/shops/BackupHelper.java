@@ -23,7 +23,7 @@ public class BackupHelper {
     public static final String[] PREF_NAMES = {
             "Shop Data",
             "MyPrefs",
-            "YOY_PREFS",     // Monthly summaries
+            "YOY_PREFS",
             "shop_data",     // GoToActivity configs
             "TodayData"      // Today's metrics
     };
@@ -102,7 +102,7 @@ public class BackupHelper {
                             if (Math.floor(num) == num && num <= Integer.MAX_VALUE && num >= Integer.MIN_VALUE) {
                                 editor.putInt(key, (int) num);  // whole number within int range
                             } else {
-                                editor.putFloat(key, (float) num);  // decimal or large number
+                                editor.putFloat(key, (float) num);
                             }
                         } else if (value instanceof Boolean) {
                             editor.putBoolean(key, (Boolean) value);
@@ -119,7 +119,6 @@ public class BackupHelper {
 
         } catch (Exception e) {
             Toast.makeText(context, "Import failed: " + e.getMessage(), Toast.LENGTH_LONG).show();
-            e.printStackTrace();
         }
     }
 

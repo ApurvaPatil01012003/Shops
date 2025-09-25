@@ -17,12 +17,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.button.MaterialButton;
+
 import java.util.ArrayList;
 
 public class SetHoliHighDay extends AppCompatActivity {
     Spinner ResetspinnerShopHoli;
     EditText edtResetHighPerDays;
-    Button btnReset;
+    MaterialButton btnReset;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

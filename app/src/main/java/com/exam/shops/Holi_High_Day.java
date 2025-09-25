@@ -3,8 +3,12 @@ package com.exam.shops;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,12 +20,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.material.button.MaterialButton;
+
 import java.util.ArrayList;
 
 public class Holi_High_Day extends AppCompatActivity {
     EditText edtHighPerDays;
     Spinner spinnerShopHoli;
-    Button btnNextSchedule;
+  MaterialButton btnNextSchedule;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,11 +48,12 @@ public class Holi_High_Day extends AppCompatActivity {
 
         Intent receivedIntent = getIntent();
         String Shopname = receivedIntent.getStringExtra("shop_name");
+        String MobileNumber = receivedIntent.getStringExtra("Mobile_no");
 //        int Result = receivedIntent.getIntExtra("ResultTurnover", -1);
 //        int SecondTurnOverValue = receivedIntent.getIntExtra("TurnOver", -1);
 //        int growth = receivedIntent.getIntExtra("EdtGrowth", -1);
 
-
+Log.d("Holi_High_Day","Mobile :"+MobileNumber);
         ArrayAdapter<String> shopholiday = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_spinner_item,
@@ -53,9 +61,6 @@ public class Holi_High_Day extends AppCompatActivity {
         );
         shopholiday.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerShopHoli.setAdapter(shopholiday);
-
-
-        edtHighPerDays = findViewById(R.id.edtHighPerDays);
 
         String[] daysArray = {"Monday", "Tuesday", "wednesday", "Thursday", "Friday", "Saturday", "Sunday"};
         boolean[] checkedDays = new boolean[daysArray.length];
@@ -84,11 +89,37 @@ public class Holi_High_Day extends AppCompatActivity {
 
         });
 
+        // Listen for changes in EditText (after selection)
+        edtHighPerDays.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) { checkInputs(); }
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
+// Listen for Spinner selection changes
+        spinnerShopHoli.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                checkInputs();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                checkInputs();
+            }
+        });
+
+
 
         int Result = getIntent().getIntExtra("ResultTurnover", -1);
         int SecondTurnOverValue = getIntent().getIntExtra("TurnOver", -1);
         int growth = getIntent().getIntExtra("EdtGrowth", -1);
 
+        btnNextSchedule.setEnabled(false);
+        btnNextSchedule.setAlpha(0.5f); // visually dimmed
 
         btnNextSchedule.setOnClickListener(v -> {
             String shopHolidays = spinnerShopHoli.getSelectedItem().toString();
@@ -98,6 +129,7 @@ public class Holi_High_Day extends AppCompatActivity {
             Intent intent = new Intent(Holi_High_Day.this, SecondActivity.class);
 
             intent.putExtra("shop_name", Shopname);
+            intent.putExtra("Mobile_no",MobileNumber);
             intent.putExtra("TurnOver", SecondTurnOverValue);
             intent.putExtra("shopsHoliday", shopHolidays);
             intent.putExtra("HighPerformace", HighPerformDays);
@@ -124,6 +156,15 @@ public class Holi_High_Day extends AppCompatActivity {
         });
 
 
+    }
+    private void checkInputs() {
+        String highPerfDays = edtHighPerDays.getText().toString().trim();
+        boolean spinnerSelected = spinnerShopHoli.getSelectedItemPosition() != 0; // assuming 0 = "Select Day"
+
+        boolean enableButton = !highPerfDays.isEmpty() && spinnerSelected;
+
+        btnNextSchedule.setEnabled(enableButton);
+        btnNextSchedule.setAlpha(enableButton ? 1f : 0.5f);
     }
 
 }

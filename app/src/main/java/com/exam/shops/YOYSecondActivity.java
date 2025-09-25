@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,7 +15,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.datepicker.MaterialDatePicker;
 
 import org.json.JSONArray;
@@ -24,9 +26,7 @@ import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
-import java.time.Year;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -36,8 +36,10 @@ import java.util.Map;
 
 public class YOYSecondActivity extends AppCompatActivity {
     EditText et_date, edtAchieved, edtQty, edtNob;
-    Button btnSave, btnDailyTable;
-    TextView txtDailyTarget;
+    MaterialButton btnSave,btnDailyTable;
+
+    private RecyclerView recyclerRecentEntries;
+    TextView txtDailyTarget  , btnViewAll, txtNoData;
     private String key;
     private int updatedValue;
     private int updatedValueDaily;
@@ -74,6 +76,17 @@ public class YOYSecondActivity extends AppCompatActivity {
         btnSave = findViewById(R.id.btnSave);
         btnDailyTable = findViewById(R.id.btnDailyTable);
         txtDailyTarget = findViewById(R.id.txtDailyTarget);
+        btnViewAll = findViewById(R.id.btnViewAll);
+        recyclerRecentEntries = findViewById(R.id.recyclerRecentEntries);
+        txtNoData = findViewById(R.id.txtNoData);
+
+        recyclerRecentEntries.setLayoutManager(new LinearLayoutManager(this));
+
+        btnSave.setOnClickListener(v -> saveEntry());
+
+        loadRecentEntries();
+
+
 
         Holiday = getIntent().getStringExtra("ShopHoliday");
         if (!Holiday.isEmpty()) {
@@ -91,10 +104,6 @@ public class YOYSecondActivity extends AppCompatActivity {
         highPerDay = getIntent().getStringExtra("HighPerformance");
 
         Growth_Per = getIntent().getIntExtra("Growth", 0);
-
-        Log.d("HIGHPERFORM", "HIGH DAY" + High_Per_Day);
-        Log.d("Growth", "groth is : " + Growth_Per);
-
 
         Intent intent = getIntent();
         monthTargetMap = (HashMap<String, Float>) getIntent().getSerializableExtra("MonthTargetMap");
@@ -167,96 +176,37 @@ public class YOYSecondActivity extends AppCompatActivity {
             }
         });
 
+        btnDailyTable.setOnClickListener(v -> {
+            String date = et_date.getText().toString().trim();
+            String Achievedstr = edtAchieved.getText().toString().trim();
+            String Quantitystr = edtQty.getText().toString().trim();
+            String nobstr = edtNob.getText().toString().trim();
 
+            int achieved = 0, quantity = 0, nob = 0;
 
-        btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String date = et_date.getText().toString();
-                String Achievedstr = edtAchieved.getText().toString();
-                String Quantitystr = edtQty.getText().toString();
-                String nobstr = edtNob.getText().toString();
-                int quantity = 0;
-                int Achieved = 0;
-                int Nob = 0;
-                try {
-                    quantity = Integer.parseInt(Quantitystr);
-                    Achieved = Integer.parseInt(Achievedstr);
-                    Nob = Integer.parseInt(nobstr);
+            if (!Achievedstr.isEmpty()) achieved = Integer.parseInt(Achievedstr);
+            if (!Quantitystr.isEmpty()) quantity = Integer.parseInt(Quantitystr);
+            if (!nobstr.isEmpty()) nob = Integer.parseInt(nobstr);
 
-                } catch (Exception e) {
-                    //  edtQty.setError("Enter a valid number");
-                    return;
-                }
+            // ✅ SAVE before navigating
 
-
-                if (!date.isEmpty() && !Achievedstr.isEmpty() && !Quantitystr.isEmpty() && !nobstr.isEmpty()) {
-                    int ach = Integer.parseInt(Achievedstr);
-                    int qty = Integer.parseInt(Quantitystr);
-                    int nob = Integer.parseInt(nobstr);
-
-                    SaveDataToSharedPref(date, ach, qty, nob);
-                    SaveDailyDataToSharedPref(date, ach, qty, nob);
-
-
-                    Toast.makeText(YOYSecondActivity.this, "Data saved", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(YOYSecondActivity.this, "Please fill all fields", Toast.LENGTH_SHORT).show();
-                }
-
-
+            if (!date.isEmpty()) {
+                SaveDataToSharedPref(date, achieved, quantity, nob);
+                SaveDailyDataToSharedPref(date, achieved, quantity, nob);
             }
 
-        });
+            Intent i = new Intent(YOYSecondActivity.this, DailyTableYOY.class);
+            i.putExtra("ShopHoliday", Holiday);
+            i.putExtra("ResultTurnYear", Result);
+            i.putExtra("Achived_Value", updatedValueDaily);
+            i.putExtra("Quantity", quantity);
+            i.putExtra("NOB", nob);
+            i.putExtra("HighPerDay", highPerDay);
+            i.putExtra("Growth", Growth_Per);
+            i.putExtra("MonthlyTarget", MonthTarget);
+            startActivityForResult(i, 101);
 
-        btnDailyTable.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String date = et_date.getText().toString().trim();
-                String Achievedstr = edtAchieved.getText().toString().trim();
-                String Quantitystr = edtQty.getText().toString().trim();
-                String nobstr = edtNob.getText().toString().trim();
-
-                int achieved = 0, quantity = 0, nob = 0;
-
-                if (!Achievedstr.isEmpty()) {
-                    achieved = Integer.parseInt(Achievedstr);
-                }
-
-                if (!Quantitystr.isEmpty()) {
-                    quantity = Integer.parseInt(Quantitystr);
-                }
-
-                if (!nobstr.isEmpty()) {
-                    nob = Integer.parseInt(nobstr);
-                }
-//
-//                if (!date.isEmpty()) {
-//                    SaveDailyDataToSharedPref(date, achieved, quantity, nob);
-//                }
-
-                Intent intent = new Intent(YOYSecondActivity.this, DailyTableYOY.class);
-                intent.putExtra("ShopHoliday", Holiday);
-                intent.putExtra("ResultTurnYear", Result);
-                //intent.putExtra("TurnYear", SecondTurnOverValue);
-                intent.putExtra("Achived_Value", updatedValueDaily);
-                intent.putExtra("Quantity", quantity);
-                intent.putExtra("NOB", nob);
-                intent.putExtra("HighPerDay", High_Per_Day);
-                intent.putExtra("Growth", Growth_Per);
-                intent.putExtra("MonthlyTarget", MonthTarget);
-                Log.d("Monthly", "MonthTarget is : " + MonthTarget);
-                //  startActivityForResult(intent, 102);
-                startActivityForResult(intent, 101);
-                ClearAllText();
-
-//                Log.d("Updated_Daily", "Updated for daily: " + updatedValueDaily);
-//                Log.d("Updated_Daily", "quantity for daily: " + quantity);
-//                Log.d("Updated_Daily", "nob for daily: " + nob);
-                // startActivity(intent);
-
-
-            }
+            ClearAllText();
         });
 
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -268,7 +218,7 @@ public class YOYSecondActivity extends AppCompatActivity {
                 intent.putExtra("MonthlyTarget", Result / 12f);
                 intent.putExtra("MonthlyAchieved", updatedValueDaily);
                 SharedPreferences todayPrefs = getSharedPreferences("TodayData", MODE_PRIVATE);
-               // float percent = todayPrefs.getFloat("today_percent", 0f);
+                // float percent = todayPrefs.getFloat("today_percent", 0f);
                 float percent = getSafeFloat(todayPrefs, "today_percent", 0f);
 
                 intent.putExtra("MonthlyAchievedPercent", percent);
@@ -320,82 +270,44 @@ public class YOYSecondActivity extends AppCompatActivity {
         editor.putString("last_selected_date", date);
         editor.apply();
 
-        //Log.d("YOY_DATA", key + " = " + updatedValue);
-
         this.key = key;
         this.updatedValue = updatedValue;
-
-
-        //  finish();
     }
 
-    public void SaveDailyDataToSharedPref(String dateInput, int Achieved, int Quantity, int nob) {
-        SharedPreferences sharedPreferences = getSharedPreferences("Shop Data", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
 
-        SimpleDateFormat inputFormat = new SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH);
-        SimpleDateFormat saveFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH);
 
-        String formattedDate = "";
+    private void SaveDailyDataToSharedPref(String dateInput, int achieved, int qty, int nob) {
+        if (dateInput == null || dateInput.trim().isEmpty()) {
+            Log.e("SaveDailyData", "❌ Cannot save: date is empty");
+            return;
+        }
+
+        // Normalize date to dd-MM-yyyy
+        String normalizedDate;
         try {
-            formattedDate = saveFormat.format(inputFormat.parse(dateInput));
+            Date date = new SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).parse(dateInput);
+            normalizedDate = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(date);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.w("SaveDailyData", "⚠️ Date parsing failed, saving raw input: " + dateInput);
+            normalizedDate = dateInput;
         }
 
-        String key = "Achieved_" + formattedDate;
-        String keyQty = "Quantity_" + formattedDate;
-        String keyNob = "NOB_" + formattedDate;
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
 
+        // ✅ Get old values before saving
+        int prevAchieved = prefs.getInt("Achieved_" + normalizedDate, 0);
+        int prevQty = prefs.getInt("Quantity_" + normalizedDate, 0);
+        int prevNob = prefs.getInt("NOB_" + normalizedDate, 0);
 
-        int prev = sharedPreferences.getInt(key, 0);
-        int prevQty = sharedPreferences.getInt(keyQty, 0);
-        int prevNob = sharedPreferences.getInt(keyNob, 0);
+        // ✅ Add new values to old ones
+        editor.putInt("Achieved_" + normalizedDate, prevAchieved + achieved);
+        editor.putInt("Quantity_" + normalizedDate, prevQty + qty);
+        editor.putInt("NOB_" + normalizedDate, prevNob + nob);
 
-        updatedValueDaily = prev + Achieved;
-        int updatedQty = prevQty + Quantity;
-        int updatedNob = prevNob + nob;
-
-        editor.putInt(key, updatedValueDaily);
-        editor.putInt(keyQty, updatedQty);
-        editor.putInt(keyNob, updatedNob);
-
-        editor.putString("last_selected_date", formattedDate);
         editor.apply();
-
-        Log.d("YOY_DATA_ForDaily", key + " = " + updatedValueDaily);
-        Log.d("YOY_DATA_ForDaily", keyQty + " = " + Quantity);
-        Log.d("YOY_DATA_ForDaily", keyNob + " = " + nob);
-
-        this.key = key;
-        this.updatedValueDaily = updatedValueDaily;
-
-
-        //chage the Achived and percentage in cardview of GotoActivity
-        String todayStr = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(System.currentTimeMillis());
-        if (formattedDate.equals(todayStr)) {
-            SharedPreferences todayPref = getSharedPreferences("TodayData", MODE_PRIVATE);
-            SharedPreferences.Editor todayEditor = todayPref.edit();
-
-            String expectedStr = todayPref.getString("today_expected", "0");
-            float expected = 0f;
-            try {
-                expected = Float.parseFloat(expectedStr);
-            } catch (Exception e) {
-                expected = 0f;
-            }
-
-            float percentage = (expected != 0f) ? ((float) updatedValueDaily / expected) * 100f : 0f;
-
-            todayEditor.putInt("today_achieved", updatedValueDaily);
-            todayEditor.putFloat("today_percent", percentage);
-            todayEditor.apply();
-
-            Log.d("TodayData", "Only updated Achieved=" + updatedValueDaily + ", Percentage=" + percentage);
-        }
-
-
     }
+
 
     private String convertToShortMonth(String fullMonth) {
         switch (fullMonth) {
@@ -633,7 +545,7 @@ public class YOYSecondActivity extends AppCompatActivity {
 
 
         String monthKey = "last_month_target_" + month + "_" + year;
-       // float lastSavedTarget = yoyPrefs.getFloat(monthKey, -1f);
+        // float lastSavedTarget = yoyPrefs.getFloat(monthKey, -1f);
         float lastSavedTarget = getSafeFloat(yoyPrefs, monthKey, -1f);
 
         String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
@@ -686,7 +598,7 @@ public class YOYSecondActivity extends AppCompatActivity {
 
         return holidays;
     }
-      private void clearExpectedDataForMonth(Calendar cal) {
+    private void clearExpectedDataForMonth(Calendar cal) {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
 
@@ -734,7 +646,129 @@ public class YOYSecondActivity extends AppCompatActivity {
         }
     }
 
+    private void saveEntry() {
+        String dateInput = et_date.getText().toString();
+        String achievedStr = edtAchieved.getText().toString();
+        String qtyStr = edtQty.getText().toString();
+        String nobStr = edtNob.getText().toString();
 
+        if (dateInput.isEmpty() || achievedStr.isEmpty() || qtyStr.isEmpty() || nobStr.isEmpty()) {
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        int achieved = Integer.parseInt(achievedStr);
+        int qty = Integer.parseInt(qtyStr);
+        int nob = Integer.parseInt(nobStr);
+
+        // Save to SharedPreferences (monthly + daily)
+        SaveDataToSharedPref(dateInput, achieved, qty, nob);
+        SaveDailyDataToSharedPref(dateInput, achieved, qty, nob);
+
+        // ✅ Pass current month calendar
+        Calendar cal = Calendar.getInstance();
+        refreshDailyTargetsForCurrentMonth(cal);
+
+        loadRecentEntries(); // Refresh recycler view
+
+        Toast.makeText(this, "Entry Saved", Toast.LENGTH_SHORT).show();
+        ClearAllText();
+    }
+    private void loadRecentEntries() {
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        Map<String, ?> allData = prefs.getAll();
+
+        List<DailyEntry> allEntries = new ArrayList<>();
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+
+        for (String key : allData.keySet()) {
+            if (key.startsWith("Achieved_")) {
+                String date = key.replace("Achieved_", "");
+                int achieved = prefs.getInt(key, 0);
+                int qty = prefs.getInt("Quantity_" + date, 0);
+                int nob = prefs.getInt("NOB_" + date, 0);
+
+                allEntries.add(new DailyEntry(date, achieved, qty, nob));
+            }
+        }
+
+        // ✅ Sort entries by date (latest first)
+        allEntries.sort((e1, e2) -> {
+            try {
+                Date d1 = dateFormat.parse(e1.getDate());
+                Date d2 = dateFormat.parse(e2.getDate());
+                return d2.compareTo(d1); // descending order
+            } catch (Exception e) {
+                return 0;
+            }
+        });
+
+        // ✅ Take last 4
+        List<DailyEntry> recentEntries = new ArrayList<>();
+        for (int i = 0; i < Math.min(4, allEntries.size()); i++) {
+            recentEntries.add(allEntries.get(i));
+        }
+
+
+
+        if (recentEntries.isEmpty()) {
+            recyclerRecentEntries.setVisibility(View.GONE);
+            txtNoData.setVisibility(View.VISIBLE);
+        } else {
+            recyclerRecentEntries.setVisibility(View.VISIBLE);
+            txtNoData.setVisibility(View.GONE);
+
+            DailyEntryAdapter adapter = new DailyEntryAdapter(recentEntries);
+            recyclerRecentEntries.setAdapter(adapter);
+        }
+
+        btnViewAll.setOnClickListener(v -> {
+            Intent intent = new Intent(YOYSecondActivity.this, ViewAllDailyDataActivity.class);
+            startActivity(intent);
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadRecentEntries(); // refresh recycler list
+        // optionally also refresh monthly total if you display it
+        recalcMonthlyTotals();
+    }
+    private void recalcMonthlyTotals() {
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        Map<String, ?> allData = prefs.getAll();
+
+        float monthTotal = 0f;
+        Calendar now = Calendar.getInstance();
+        int currentMonth = now.get(Calendar.MONTH);
+        int currentYear = now.get(Calendar.YEAR);
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+
+        for (String key : allData.keySet()) {
+            if (key.startsWith("Achieved_")) {
+                String dateStr = key.replace("Achieved_", "");
+                try {
+                    Date d = dateFormat.parse(dateStr);
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(d);
+                    if (cal.get(Calendar.MONTH) == currentMonth && cal.get(Calendar.YEAR) == currentYear) {
+                        monthTotal += prefs.getInt(key, 0);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        monthlyAchieved = monthTotal;
+        Log.d("YOYSecondActivity", "Monthly Achieved recalculated: ₹" + monthlyAchieved);
+
+        // If you show monthly total in UI, update here:
+        // txtMonthlyAchieved.setText("Monthly Achieved: ₹" + (int)monthTotal);
+    }
 
 
 

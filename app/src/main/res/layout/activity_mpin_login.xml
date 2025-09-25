@@ -1,38 +1,26 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
     android:id="@+id/main"
-    android:background="#F4F6FA"
-    android:padding="24dp">
+
+ >
+
 
 
     <ImageView
-        android:id="@+id/ivLogo"
-        android:layout_width="200dp"
-        android:layout_height="120dp"
-        android:src="@drawable/mybiztracker"
-        android:layout_gravity="center_horizontal"
-        android:contentDescription="App Logo"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="8dp" />
-
-    <!-- PIN Setup Card -->
-    <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        card_view:cardElevation="4dp"
-        card_view:cardCornerRadius="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="24dp">
+        android:src="@drawable/mpin" />
+
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="#FFFFFF"
             android:padding="24dp">
 
             <TextView
@@ -46,33 +34,84 @@
                 android:layout_marginBottom="24dp" />
 
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:hint="Enter 4-digit PIN"
-                style="@style/CustomTextInputLayoutOutlinedBox">
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="10dp"
+                android:weightSum="4"
+                android:layout_gravity="center_horizontal"
+                android:spacing="8dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/edtPin"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                <EditText
+                    android:id="@+id/edtPin1"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
                     android:inputType="numberPassword"
-                    style="@style/CustomTextInputEditText"
-                    android:maxLength="4" />
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:gravity="center"
+                    android:background="@drawable/bg_edittext_rounded"
+                    android:textSize="18sp"
+                    android:maxLength="1"/>
 
-            <Button
+                <EditText
+                    android:id="@+id/edtPin2"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:inputType="numberPassword"
+                    android:gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_edittext_rounded"
+                    android:textSize="18sp"
+                    android:maxLength="1"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="60dp"
+                    android:text="-"
+                    android:gravity="center"
+                    android:textSize="24sp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"/>
+
+                <EditText
+                    android:id="@+id/edtPin3"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:inputType="numberPassword"
+                    android:gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_edittext_rounded"
+                    android:textSize="18sp"
+                    android:maxLength="1"/>
+
+                <EditText
+                    android:id="@+id/edtPin4"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:inputType="numberPassword"
+                    android:gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/bg_edittext_rounded"
+                    android:textSize="18sp"
+                    android:maxLength="1"/>
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnNextPin"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Login"
-                android:textAllCaps="true"
-                android:layout_marginTop="24dp"
-                android:backgroundTint="#007BFF"
-                android:textColor="#FFFFFF"
-                android:fontFamily="sans-serif-medium"
-                android:padding="12dp"
-                android:layout_gravity="center" />
+                android:layout_marginTop="70dp"
+                android:layout_marginBottom="20dp"
+                android:text="Continue"
+                android:padding="20dp"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                style="@style/Widget.MaterialComponents.Button"
+                app:cornerRadius="12dp"
+                android:backgroundTint="#002B73"
+                android:textColor="@android:color/white"/>
+
             <TextView
                 android:id="@+id/txtReset"
                 android:layout_width="wrap_content"
@@ -87,7 +126,6 @@
 
 
 
-    </androidx.cardview.widget.CardView>
 
 
 </LinearLayout>

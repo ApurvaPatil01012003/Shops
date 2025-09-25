@@ -21,6 +21,7 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,13 +33,18 @@ import androidx.core.view.GravityCompat;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.navigation.NavigationView;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,23 +54,22 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+
 import android.Manifest;
 
 
 public class GoToMAndD extends AppCompatActivity {
-    Button btnyes, btnDyes;
-    TextView txtShopName, txtYearTarget, txtYearlyAch, YearlyAchPer, txtMonthTarget, MonthlyAch, MonthlyAchPer, txtTargetRecentdays, txtAchievedRecentdays, txtAchievedPerRecentdays;
-    Spinner spinnerSR;
-    LineChart lineChart, lineChartATV, lineChartASP;
+    TextView btnyes, btnDyes, txtShopName, txtYearTarget, txtYearlyAch, txtMonthTarget, MonthlyAch,txtMonth;
     float monthlyTarget;
     int growth;
-    DrawerLayout drawerLayout;
-    NavigationView navigationView;
     ActionBarDrawerToggle toggle;
     private List<String> publicHolidays;
     private List<String> highPerfPreDays;
     private String shopHoliday;
 
+    BottomNavigationView bottomNav;
+    private int selectedYear;
+    private int selectedMonth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,14 +81,6 @@ public class GoToMAndD extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            int paddingDp = (int) (30 * getResources().getDisplayMetrics().density);
-
-            v.setPadding(
-                    systemBars.left + paddingDp,
-                    systemBars.top + paddingDp,
-                    systemBars.right + paddingDp,
-                    systemBars.bottom + paddingDp
-            );
 
             return insets;
         });
@@ -94,56 +91,14 @@ public class GoToMAndD extends AppCompatActivity {
         txtYearTarget = findViewById(R.id.txtYearTarget);
         txtMonthTarget = findViewById(R.id.txtMonthTarget);
         txtYearlyAch = findViewById(R.id.txtYearlyAch);
-        YearlyAchPer = findViewById(R.id.YearlyAchPer);
         MonthlyAch = findViewById(R.id.MonthlyAch);
-        MonthlyAchPer = findViewById(R.id.MonthlyAchPer);
-        spinnerSR = findViewById(R.id.spinnerSR);
-        txtTargetRecentdays = findViewById(R.id.txtTargetRecentdays);
-        txtAchievedRecentdays = findViewById(R.id.txtAchievedRecentdays);
-        txtAchievedPerRecentdays = findViewById(R.id.txtAchievedPerRecentdays);
-        lineChart = findViewById(R.id.lineChart);
-        drawLineChartABS(7);
-        lineChartATV = findViewById(R.id.lineChartATV);
-        drawLineChartATV(7);
-        lineChartASP = findViewById(R.id.lineChartASP);
-        drawLineChartASP(7);
-        drawerLayout = findViewById(R.id.drawer_layout);
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-
-        ArrayAdapter<String> SR = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                new String[]{"Select Days", "15 days", "7 days"});
-        SR.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerSR.setAdapter(SR);
-        spinnerSR.setSelection(2);
-
-        spinnerSR.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 1) {
-                    updateRecentDaysData(15);
-                    drawLineChartABS(15);
-                    drawLineChartATV(15);
-                    drawLineChartASP(15);
-                } else if (position == 2) {
-                    updateRecentDaysData(7);
-                    drawLineChartABS(7);
-                    drawLineChartATV(7);
-                    drawLineChartASP(7);
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-            }
-        });
+        txtMonth = findViewById(R.id.txtMonth);
 
 
         String shopname = getIntent().getStringExtra("ShopName");
-
+        String MobileNumber = getIntent().getStringExtra("Mobile_no");
+        Log.d("Mob","mobile :"+MobileNumber);
+        Log.d("Mob","mobile :"+shopname);
 
         int yearlyAchieved = getIntent().getIntExtra("YearlyAchieved", -1);
         if (yearlyAchieved == -1) {
@@ -161,11 +116,44 @@ public class GoToMAndD extends AppCompatActivity {
 
 
         updateYearlyAchievedDisplay();
-        updateCurrentMonthAchieved();
+        updateMonthAchieved(selectedYear, selectedMonth);
         updateRecentDaysData(7);
         updateRecentDaysData(15);
         updateTodaysMetricsFromPrefs();
 
+        RecyclerView recyclerWeeks = findViewById(R.id.recyclerWeeks);
+        recyclerWeeks.setLayoutManager(new LinearLayoutManager(this));
+
+        List<WeekEntry> weekEntries = getWeeklyEntriesForMonth(selectedYear, selectedMonth);
+        WeekEntryAdapter weekAdapter = new WeekEntryAdapter(weekEntries);
+        recyclerWeeks.setAdapter(weekAdapter);
+
+
+        Calendar now = Calendar.getInstance();
+        selectedYear = now.get(Calendar.YEAR);
+        selectedMonth = now.get(Calendar.MONTH);
+
+        txtMonth.setText(new SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+                .format(now.getTime()));
+
+        loadMonthData(); // Load current month initially
+
+        Button btnViewPrevious = findViewById(R.id.btnViewPrevious);
+
+        btnViewPrevious.setOnClickListener(v -> {
+            selectedMonth--;
+            if (selectedMonth < 0) { // go to previous year
+                selectedMonth = 11;
+                selectedYear--;
+            }
+
+            Calendar cal = Calendar.getInstance();
+            cal.set(selectedYear, selectedMonth, 1);
+            txtMonth.setText(new SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+                    .format(cal.getTime()));
+
+            loadMonthData(); // Reload data for new month
+        });
 
         SharedPreferences prefs = getSharedPreferences("ShopData", MODE_PRIVATE);
 
@@ -184,20 +172,8 @@ public class GoToMAndD extends AppCompatActivity {
 
         if (shopname == null || shopname.isEmpty()) {
             shopname = prefs.getString("ShopName", "");
+            MobileNumber = prefs.getString("Mobile_no", "");
         }
-
-
-
-
-//        Log.d("GOTOACTIVITY", "ShopName is : " + shopname);
-//
-//        Log.d("GoToMAndD", "From SharedPref or Intent:");
-//        Log.d("GoToMAndD", "TurnOver: " + SecondTurnOverValue);
-//        Log.d("GoToMAndD", "TurnOver Result: " + Result);
-//
-//        Log.d("GoToMAndD", "Holiday: " + Holiday);
-//        Log.d("GoToMAndD", "HighPerDay: " + HighPerDay);
-//        Log.d("GoToMAndD", "Growth: " + growth);
 
 
         SharedPreferences.Editor editor = prefs.edit();
@@ -206,11 +182,13 @@ public class GoToMAndD extends AppCompatActivity {
         editor.putString("selected_days", HighPerDay);
         editor.putInt("Growth", growth);
         editor.putString("ShopName", shopname);
+        editor.putString("Mobile_no",MobileNumber);
         editor.apply();
 
 
         SharedPreferences sharedPref = getSharedPreferences("shop_data", MODE_PRIVATE);
         String name = sharedPref.getString("shop_name", "");
+        String mob = sharedPref.getString("Mobile_no","");
         Holiday = sharedPref.getString("Shop_Holiday", "");
         HighPerDay = sharedPref.getString("selected_days", "");
         growth = sharedPref.getInt("editGrowth", 0);
@@ -236,14 +214,14 @@ public class GoToMAndD extends AppCompatActivity {
 
         String finalHoliday = Holiday;
         int finalSecondTurnOverValue1 = SecondTurnOverValue;
-        //int finalResult1 = Result;
+
         String finalHighPerDay = HighPerDay;
         int finalGrowth = growth;
         Map<String, Float> updatedMonthlyTargets = getUpdatedMonthlyTargetsFromPrefs(growth);
 
         HashMap<String, Float> monthTargetMap = new HashMap<>(updatedMonthlyTargets);
         btnDyes.setOnClickListener(v -> {
-            Intent i = new Intent(GoToMAndD.this, YOYSecondActivity.class);
+            Intent i = new Intent(GoToMAndD.this, DailyTableYOY.class);
             i.putExtra("ShopHoliday", finalHoliday);
             i.putExtra("TurnYear", finalSecondTurnOverValue1);
             //i.putExtra("ResultTurnYear", finalResult1);
@@ -256,72 +234,51 @@ public class GoToMAndD extends AppCompatActivity {
             startActivityForResult(i, 101);
 
 
+        });
+        bottomNav = findViewById(R.id.bottomNav); // initialize first
 
+// Automatically select Home tab
+        bottomNav.setSelectedItemId(R.id.btmNav_home);
+// Set item selected listener
+        String finalMobileNumber = MobileNumber;
+        bottomNav.setOnItemSelectedListener(item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.btmNav_home) {
+                // Already Home, do nothing
+                return true;
+            } else if (id == R.id.btmNav_data_erntry) {
+                Intent iDataEntry = new Intent(GoToMAndD.this, YOYSecondActivity.class);
+                iDataEntry.putExtra("ShopHoliday", finalHoliday);
+                iDataEntry.putExtra("TurnYear", finalSecondTurnOverValue1);
+                //i.putExtra("ResultTurnYear", finalResult1);
+                iDataEntry.putExtra("HighPerformance", finalHighPerDay);
+                iDataEntry.putExtra("Growth", finalGrowth);
+                iDataEntry.putExtra("MonthlyTarget", monthlyTarget);
+                // Log.d("Monthly","Monthly target is : "+monthlyTarget);
+                iDataEntry.putExtra("MonthTargetMap", monthTargetMap);
+
+                startActivityForResult(iDataEntry, 101);
+                return true;
+            } else if (id == R.id.btmNav_data_profile) {
+                Intent iProfile = new Intent(GoToMAndD.this,Profile.class);
+                iProfile.putExtra("shop_name",name);
+                iProfile.putExtra("Mobile_no", mob);
+                startActivity(iProfile);
+
+                return true;
+            }
+            return false;
         });
 
 
-
-
-        toggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open_drawer, R.string.close_drawer);
-        drawerLayout.addDrawerListener(toggle);
-        toggle.syncState();
-        Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
-
-        navigationView = findViewById(R.id.nav_view);
-        if (navigationView != null) {
-            String finalShopname = shopname;
-            navigationView.setNavigationItemSelectedListener(item -> {
-                int id = item.getItemId();
-                if (id == R.id.nav_home) {
-
-                } else if (id == R.id.nav_tutorial) {
-                    startActivity(new Intent(this, Tutorial.class));
-                } else if (id == R.id.Set_Rev_Fig) {
-                    Intent i = new Intent(GoToMAndD.this, SetRevenueFigures.class);
-                    i.putExtra("ShopName", name);
-                    startActivity(i);
-                    Log.d("ShopName", "ShopName is : " + name);
-                } else if (id == R.id.Holi_High_Day) {
-                    Intent i = new Intent(GoToMAndD.this, SetHoliHighDay.class);
-                    startActivity(i);
-                } else if (id == R.id.Reset_Mpin) {
-                    Intent i = new Intent(GoToMAndD.this, ResetMpin.class);
-                    startActivity(i);
-                } else if (id == R.id.Faq) {
-                    Intent i = new Intent(GoToMAndD.this, FAQ.class);
-                    startActivity(i);
-                }
-                else if(id == R.id.ExportFile)
-                {
-                    BackupHelper.exportBackup(GoToMAndD.this);
-                }
-                else if(id == R.id.ImportFile)
-                {
-                    Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                    i.addCategory(Intent.CATEGORY_OPENABLE);
-                    i.setType("*/*");
-                    startActivityForResult(i, 123);
-
-                }else if(id == R.id.Calender)
-                {
-                    Intent i = new Intent(GoToMAndD.this,CalendarDays.class);
-                    startActivity(i);
-                }
-
-                drawerLayout.closeDrawer(GravityCompat.START);
-                return true;
-            });
-        } else {
-            Log.e("GoToMAndD", "NavigationView not found!");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                        != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            return;
         }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
-                    ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                            != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
-                return;
-            }
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -337,10 +294,6 @@ public class GoToMAndD extends AppCompatActivity {
         }
 
 
-
-
-
-
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
         String todayKey = sdf.format(Calendar.getInstance().getTime());
 
@@ -349,8 +302,8 @@ public class GoToMAndD extends AppCompatActivity {
         shopHoliday = sharedPref.getString("Shop_Holiday", "");
         publicHolidays = HolidayUtils.loadHolidayDates(this);
         highPerfPreDays = HolidayUtils.getPreHolidayHighPerformanceDates(publicHolidays, shopHoliday);
-        Log.d("Publicdays","IS : "+publicHolidays);
-        Log.d("Publicdays","IS : "+highPerfPreDays);
+        Log.d("Publicdays", "IS : " + publicHolidays);
+        Log.d("Publicdays", "IS : " + highPerfPreDays);
 
     }
 
@@ -371,9 +324,9 @@ public class GoToMAndD extends AppCompatActivity {
         growth = getSharedPreferences("shop_data", MODE_PRIVATE).getInt("editGrowth", 0);
         txtYearTarget.setText(String.valueOf(growth));
         updateYearlyAchievedDisplay();
-        updateCurrentMonthAchieved();
+        updateMonthAchieved(selectedYear, selectedMonth);
         updateTodaysMetricsFromPrefs();
-
+        reloadWeekRecycler();
     }
 
     private int getTotalAchievedForYear(int year) {
@@ -396,7 +349,7 @@ public class GoToMAndD extends AppCompatActivity {
     private void updateYearlyAchievedDisplay() {
         int currentYear = Calendar.getInstance().get(Calendar.YEAR);
         int yearlyAchieved = getTotalAchievedForYear(currentYear);
-        txtYearlyAch.setText("₹ " + yearlyAchieved);
+        txtYearlyAch.setText("₹ " + yearlyAchieved + "/");
 
         float percent = 0f;
 
@@ -408,9 +361,9 @@ public class GoToMAndD extends AppCompatActivity {
 
         if (growth != 0) {
             percent = ((float) yearlyAchieved / growth) * 100f;
-            YearlyAchPer.setText(String.format(Locale.US, "%.2f", percent) + "%");
+            //   YearlyAchPer.setText(String.format(Locale.US, "%.2f", percent) + "%");
         } else {
-            YearlyAchPer.setText("N/A");
+            //  YearlyAchPer.setText("N/A");
             Log.w("GoToMAndD", "Yearly Target (Result) is 0 — cannot calculate percentage");
         }
 
@@ -444,40 +397,39 @@ public class GoToMAndD extends AppCompatActivity {
             }
 
 
+        }
+
+        reloadWeekRecycler();
 
 
     }
 
-
-
-    }
-
-    private void updateCurrentMonthAchieved() {
-        int year = Calendar.getInstance().get(Calendar.YEAR);
-        int monthIndex = Calendar.getInstance().get(Calendar.MONTH);
-        String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-
-        String currentMonth = monthNames[monthIndex];
-
-        SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
-        int dataYear = (currentMonth.equals("Jan") || currentMonth.equals("Feb") || currentMonth.equals("Mar"))
-                ? year + 1 : year;
-
-        String key = "data_" + currentMonth + "_" + dataYear + "_Achieved";
-        int achieved = prefs.getInt(key, 0);
-
-        //monthlyTarget = prefs.getFloat("expected_" + currentMonth + "_" + dataYear, growth / 12f);
-        monthlyTarget = getSafeFloat(prefs, "expected_" + currentMonth + "_" + dataYear, growth / 12f);
-
-        float percent = (monthlyTarget > 0) ? (achieved * 100f / monthlyTarget) : 0f;
-
-        MonthlyAch.setText("₹ " + achieved);
-        txtMonthTarget.setText("₹ " + String.format("%.0f", monthlyTarget));
-        MonthlyAchPer.setText(String.format(Locale.US, "%.2f ", percent) + "%");
-
-        Log.d("MonthlyAch", "Month: " + currentMonth + " | Target: ₹" + monthlyTarget + " | Achieved: ₹" + achieved + " | Percent: " + percent);
-    }
+//    private void updateCurrentMonthAchieved() {
+//        int year = Calendar.getInstance().get(Calendar.YEAR);
+//        int monthIndex = Calendar.getInstance().get(Calendar.MONTH);
+//        String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+//                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+//
+//        String currentMonth = monthNames[monthIndex];
+//
+//        SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+//        int dataYear = (currentMonth.equals("Jan") || currentMonth.equals("Feb") || currentMonth.equals("Mar"))
+//                ? year + 1 : year;
+//
+//        String key = "data_" + currentMonth + "_" + dataYear + "_Achieved";
+//        int achieved = prefs.getInt(key, 0);
+//
+//        //monthlyTarget = prefs.getFloat("expected_" + currentMonth + "_" + dataYear, growth / 12f);
+//        monthlyTarget = getSafeFloat(prefs, "expected_" + currentMonth + "_" + dataYear, growth / 12f);
+//
+//        float percent = (monthlyTarget > 0) ? (achieved * 100f / monthlyTarget) : 0f;
+//
+//        MonthlyAch.setText("₹ " + achieved + "/");
+//        txtMonthTarget.setText("₹ " + String.format("%.0f", monthlyTarget));
+//        // MonthlyAchPer.setText(String.format(Locale.US, "%.2f ", percent) + "%");
+//
+//        Log.d("MonthlyAch", "Month: " + currentMonth + " | Target: ₹" + monthlyTarget + " | Achieved: ₹" + achieved + " | Percent: " + percent);
+//    }
 
     private void updateRecentDaysData(int daysBack) {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
@@ -500,173 +452,15 @@ public class GoToMAndD extends AppCompatActivity {
 
         float percent = (expectedTotal > 0) ? (achievedTotal * 100f / expectedTotal) : 0f;
 
-        txtTargetRecentdays.setText("₹ " + String.format(Locale.US, "%.0f", expectedTotal));
-        txtAchievedRecentdays.setText("₹ " + achievedTotal);
-        txtAchievedPerRecentdays.setText(String.format(Locale.US, "%.2f", percent) + "%");
+//        txtTargetRecentdays.setText("₹ " + String.format(Locale.US, "%.0f", expectedTotal));
+//        txtAchievedRecentdays.setText("₹ " + achievedTotal);
+//        txtAchievedPerRecentdays.setText(String.format(Locale.US, "%.2f", percent) + "%");
 
         Log.d("RecentStats", daysBack + " Days → Target: ₹" + expectedTotal +
                 " | Achieved: ₹" + achievedTotal + " | %: " + percent);
 
 
     }
-
-
-    private void drawLineChartABS(int daysBack) {
-        LineChart lineChart = findViewById(R.id.lineChart);
-        lineChart.clear();
-
-        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
-
-        List<Entry> absEntries = new ArrayList<>();
-        List<String> xLabels = new ArrayList<>();
-
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM", Locale.US);
-
-        for (int i = daysBack; i >= 1; i--) {
-            calendar = Calendar.getInstance();
-            calendar.add(Calendar.DAY_OF_MONTH, -i);
-
-            String dateKey = new SimpleDateFormat("dd-MM-yyyy", Locale.US).format(calendar.getTime());
-            String label = dateFormat.format(calendar.getTime());
-            xLabels.add(label);
-
-            int achieved = prefs.getInt("Achieved_" + dateKey, 0);
-            int qty = prefs.getInt("Quantity_" + dateKey, 0);
-            int nob = prefs.getInt("NOB_" + dateKey, 0);
-
-            int abs = (nob != 0) ? qty / nob : 0;
-
-            absEntries.add(new Entry(daysBack - i, abs));
-
-        }
-
-        LineDataSet absSet = new LineDataSet(absEntries, "ABS");
-        absSet.setColor(Color.RED);
-        absSet.setCircleColor(Color.RED);
-
-
-        LineData lineData = new LineData(absSet);
-        lineChart.setData(lineData);
-
-        // X axis labels
-        XAxis xAxis = lineChart.getXAxis();
-        xAxis.setGranularity(1f);
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(xLabels));
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-
-        lineChart.getAxisRight().setEnabled(false);
-        lineChart.getDescription().setEnabled(false);
-        lineChart.animateY(500);
-        lineChart.invalidate();
-    }
-
-
-    private void drawLineChartATV(int daysBack) {
-        LineChart lineChartATV = findViewById(R.id.lineChartATV);
-        lineChartATV.clear();
-
-        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
-
-        List<Entry> atvEntries = new ArrayList<>();
-        List<String> xLabels = new ArrayList<>();
-
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM", Locale.US);
-
-        for (int i = daysBack; i >= 1; i--) {
-            calendar = Calendar.getInstance();
-            calendar.add(Calendar.DAY_OF_MONTH, -i);
-
-            String dateKey = new SimpleDateFormat("dd-MM-yyyy", Locale.US).format(calendar.getTime());
-            String label = dateFormat.format(calendar.getTime());
-            xLabels.add(label);
-
-            int achieved = prefs.getInt("Achieved_" + dateKey, 0);
-            int qty = prefs.getInt("Quantity_" + dateKey, 0);
-            int nob = prefs.getInt("NOB_" + dateKey, 0);
-
-
-            float atv = (nob != 0) ? (float) achieved / nob : 0;
-
-
-            atvEntries.add(new Entry(daysBack - i, atv));
-
-        }
-
-
-        LineDataSet atvSet = new LineDataSet(atvEntries, "ATV");
-        atvSet.setColor(Color.BLUE);
-        atvSet.setCircleColor(Color.BLUE);
-        atvSet.setLineWidth(2f);
-
-
-        LineData lineData = new LineData(atvSet);
-        lineChartATV.setData(lineData);
-
-        // X axis labels
-        XAxis xAxis = lineChartATV.getXAxis();
-        xAxis.setGranularity(1f);
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(xLabels));
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-
-        lineChartATV.getAxisRight().setEnabled(false);
-        lineChartATV.getDescription().setEnabled(false);
-        lineChartATV.animateY(500);
-        lineChartATV.invalidate();
-    }
-
-
-    private void drawLineChartASP(int daysBack) {
-        LineChart lineChartASP = findViewById(R.id.lineChartASP);
-        lineChartASP.clear();
-
-        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
-
-        List<Entry> aspEntries = new ArrayList<>();
-        List<String> xLabels = new ArrayList<>();
-
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM", Locale.US);
-
-        for (int i = daysBack; i >= 1; i--) {
-            calendar = Calendar.getInstance();
-            calendar.add(Calendar.DAY_OF_MONTH, -i);
-
-            String dateKey = new SimpleDateFormat("dd-MM-yyyy", Locale.US).format(calendar.getTime());
-            String label = dateFormat.format(calendar.getTime());
-            xLabels.add(label);
-
-            int achieved = prefs.getInt("Achieved_" + dateKey, 0);
-            int qty = prefs.getInt("Quantity_" + dateKey, 0);
-            int nob = prefs.getInt("NOB_" + dateKey, 0);
-
-
-            float asp = (qty != 0) ? (float) achieved / qty : 0;
-
-
-            aspEntries.add(new Entry(daysBack - i, asp));
-        }
-
-
-        LineDataSet aspSet = new LineDataSet(aspEntries, "ASP");
-        aspSet.setColor(Color.GREEN);
-        aspSet.setCircleColor(Color.GREEN);
-        LineData lineData = new LineData(aspSet);
-        lineChartASP.setData(lineData);
-
-        // X axis labels
-        XAxis xAxis = lineChartASP.getXAxis();
-        xAxis.setGranularity(1f);
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(xLabels));
-        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-
-        lineChartASP.getAxisRight().setEnabled(false);
-        lineChartASP.getDescription().setEnabled(false);
-        lineChartASP.animateY(500);
-        lineChartASP.invalidate();
-    }
-
 
     private void updateTodaysMetricsFromPrefs() {
         SharedPreferences todayPrefs = getSharedPreferences("TodayData", MODE_PRIVATE);
@@ -712,9 +506,8 @@ public class GoToMAndD extends AppCompatActivity {
             cal.add(Calendar.DAY_OF_MONTH, -1);
             String dateStr = keyFormat.format(cal.getTime());
 
-          //float expected = prefs.getFloat("Expected_" + dateStr, -1f);
+            //float expected = prefs.getFloat("Expected_" + dateStr, -1f);
             float expected = getSafeFloat(prefs, "Expected_" + dateStr, -1f);
-
 
 
             if (expected >= 0) {
@@ -727,9 +520,6 @@ public class GoToMAndD extends AppCompatActivity {
         Log.d("ExpectedSum", daysBack + " days total: ₹" + total);
         return total;
     }
-
-
-
 
 
     private Map<String, Float> getUpdatedMonthlyTargetsFromPrefs(int yearlyGrowth) {
@@ -751,8 +541,8 @@ public class GoToMAndD extends AppCompatActivity {
                     : fyStartYear;
 
             String key = "expected_" + month + "_" + year;
-           //float target = prefs.getFloat(key, -1f);
-           float target = getSafeFloat(prefs, key, -1f);
+            //float target = prefs.getFloat(key, -1f);
+            float target = getSafeFloat(prefs, key, -1f);
 
             if (target == -1f) {
                 target = defaultPerMonth;
@@ -771,8 +561,6 @@ public class GoToMAndD extends AppCompatActivity {
         int month = calendar.get(Calendar.MONTH);
         return (month >= Calendar.APRIL) ? year : (year - 1);
     }
-
-
 
 
     private void scheduleDailyNotification() {
@@ -832,5 +620,87 @@ public class GoToMAndD extends AppCompatActivity {
             );
         }
     }
+    private List<WeekEntry> getWeeklyEntriesForMonth(int year, int month) {
+        List<WeekEntry> list = new ArrayList<>();
+        SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
+
+        Calendar temp = Calendar.getInstance();
+        temp.set(year, month, 1);
+        int lastDay = temp.getActualMaximum(Calendar.DAY_OF_MONTH);
+
+        int[][] ranges = {
+                {1, 7},
+                {8, 14},
+                {15, 21},
+                {22, lastDay}
+        };
+
+        for (int i = 0; i < ranges.length; i++) {
+            int startDay = ranges[i][0];
+            int endDay = ranges[i][1];
+
+            int achievedSum = 0;
+            for (int day = startDay; day <= endDay; day++) {
+                Calendar d = Calendar.getInstance();
+                d.set(year, month, day);
+                String dateStr = dateFormat.format(d.getTime());
+                achievedSum += prefs.getInt("Achieved_" + dateStr, 0);
+            }
+
+            String startDate = dateFormat.format(getDate(year, month, startDay));
+            String endDate = dateFormat.format(getDate(year, month, endDay));
+            String dateRange = startDate + " - " + endDate;
+
+            list.add(new WeekEntry("Week " + (i + 1), dateRange, achievedSum));
+        }
+
+        return list;
+    }
+
+    private java.util.Date getDate(int year, int month, int day) {
+        Calendar c = Calendar.getInstance();
+        c.set(year, month, day, 0, 0, 0);
+        return c.getTime();
+    }
+    private void loadMonthData() {
+        // ✅ Update current month achieved + target
+        updateMonthAchieved(selectedYear, selectedMonth);
+
+        // ✅ Reload week entries
+        RecyclerView recyclerWeeks = findViewById(R.id.recyclerWeeks);
+        recyclerWeeks.setLayoutManager(new LinearLayoutManager(this));
+
+        List<WeekEntry> weekEntries = getWeeklyEntriesForMonth(selectedYear, selectedMonth);
+        WeekEntryAdapter weekAdapter = new WeekEntryAdapter(weekEntries);
+        recyclerWeeks.setAdapter(weekAdapter);
+    }
+    private void updateMonthAchieved(int year, int monthIndex) {
+        String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+
+        String currentMonth = monthNames[monthIndex];
+
+        SharedPreferences prefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
+        int dataYear = (currentMonth.equals("Jan") || currentMonth.equals("Feb") || currentMonth.equals("Mar"))
+                ? year + 1 : year;
+
+        String key = "data_" + currentMonth + "_" + dataYear + "_Achieved";
+        int achieved = prefs.getInt(key, 0);
+
+        monthlyTarget = getSafeFloat(prefs, "expected_" + currentMonth + "_" + dataYear, growth / 12f);
+
+        MonthlyAch.setText("₹ " + achieved + "/");
+        txtMonthTarget.setText("₹ " + String.format("%.0f", monthlyTarget));
+    }
+    private void reloadWeekRecycler() {
+        RecyclerView recyclerWeeks = findViewById(R.id.recyclerWeeks);
+        recyclerWeeks.setLayoutManager(new LinearLayoutManager(this));
+
+        List<WeekEntry> weekEntries = getWeeklyEntriesForMonth(selectedYear, selectedMonth);
+        WeekEntryAdapter weekAdapter = new WeekEntryAdapter(weekEntries);
+        recyclerWeeks.setAdapter(weekAdapter);
+    }
+
 
 }

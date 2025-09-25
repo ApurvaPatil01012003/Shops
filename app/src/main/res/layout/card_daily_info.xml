@@ -55,7 +55,6 @@
         </LinearLayout>
 
 
-
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
@@ -69,15 +68,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clickable="false"
-            android:orientation="vertical"
-            android:visibility="gone">
-
-
+            android:orientation="vertical">
 
 
             <TextView
                 android:id="@+id/txtType"
                 style="@style/DetailTextStyle"
+                android:textColor="#E46B45"
                 android:text="Type: Working Day" />
 
 
@@ -96,24 +93,6 @@
                     android:layout_weight="1"
                     android:text="₹35,000"
                     android:textSize="15sp" />
-
-                <ImageView
-                    android:id="@+id/btnEditExpected"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="8dp"
-                    android:contentDescription="Edit Expected"
-                    android:src="@drawable/ic_edit" />
-            </LinearLayout>
-
-            <!-- Achieved with Edit Icon -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
                 <TextView
                     android:id="@+id/txtAchieved"
                     style="@style/DetailTextStyle"
@@ -123,14 +102,8 @@
                     android:text="₹35,000"
                     android:textSize="15sp" />
 
-                <ImageView
-                    android:id="@+id/btnEditAchieved"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="8dp"
-                    android:contentDescription="Edit Achieved"
-                    android:src="@drawable/ic_edit" />
             </LinearLayout>
+
 
             <!-- Quantity with Edit Icon -->
             <LinearLayout
@@ -147,24 +120,6 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Quantity: 120" />
-
-                <ImageView
-                    android:id="@+id/btnEditQuantity"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="8dp"
-                    android:contentDescription="Edit Quantity"
-                    android:src="@drawable/ic_edit" />
-            </LinearLayout>
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
                 <TextView
                     android:id="@+id/txtNOB"
                     style="@style/DetailTextStyle"
@@ -173,30 +128,47 @@
                     android:layout_weight="1"
                     android:text="NOB: 35" />
 
-                <ImageView
-                    android:id="@+id/btnEditNOB"
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
-                    android:layout_marginStart="8dp"
-                    android:contentDescription="Edit NOB"
-                    android:src="@drawable/ic_edit" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/txtAchievedPer"
-                style="@style/DetailTextStyle"
-                android:layout_marginTop="8dp"
-                android:text="Achieved %: 87.5%" />
 
 
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <!-- Loss Text -->
+                <TextView
+                    android:id="@+id/txtLoss"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="8dp"
+                    android:text="Loss: ₹0"
+                    android:textSize="16sp" />
+
+                <!-- Distribute Loss Button -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnLoss"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="#B0B0B0"
+                    android:text="Distribute loss"
+                    android:textColor="#000000" />
+
+
+
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:weightSum="3"
-                android:gravity="center"
-                android:paddingVertical="8dp">
+                android:weightSum="4"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
 
                 <TextView
                     android:id="@+id/txtABS"
@@ -224,42 +196,20 @@
                     android:layout_weight="1"
                     android:gravity="center"
                     android:text="ASP: 000" />
-            </LinearLayout>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp"
-                android:padding="8dp">
 
-                <!-- Loss Text -->
+                <!-- Edit Amount Field -->
                 <TextView
-                    android:id="@+id/txtLoss"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/edtAmount"
+                    style="@style/DetailTextStyle"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Loss: ₹0"
-                    android:textSize="16sp"
-                    android:layout_marginEnd="8dp"
                     android:layout_weight="1"
-                    android:gravity="center_vertical"
-                    android:paddingEnd="8dp" />
-
-                <!-- Distribute Loss Button -->
-                <Button
-                    android:id="@+id/btnLoss"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:backgroundTint="#007BFF"
-                    android:text="Distribute Loss"
-                    android:textColor="#FFFFFF"
-                    android:paddingVertical="6dp"
-                    android:paddingHorizontal="12dp"
-                    android:gravity="center" />
+                    android:gravity="center"
+                    android:textColor="#E46B45"
+                  android:text="Edit Amount >"/>
             </LinearLayout>
-
 
 
         </LinearLayout>
-
     </LinearLayout>
 </androidx.cardview.widget.CardView>

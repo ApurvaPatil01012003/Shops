@@ -18,12 +18,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.material.button.MaterialButton;
+
 import java.util.Calendar;
 
 public class SetRevenueFigures extends AppCompatActivity {
     EditText ResetFirstTurnOver,ResetSecondTurnOver,edtResetGrowth;
     TextView txtResetFirstTurnOver,txtResetSecondTurnOver,txtResetGrowth,ResetEGFY,txtResetGrowthShow,ResetShopName;
-    Button btnReset;
+    MaterialButton btnReset;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,7 +116,7 @@ public class SetRevenueFigures extends AppCompatActivity {
                     Toast.makeText(SetRevenueFigures.this, "Revenue Reset Successfully", Toast.LENGTH_SHORT).show();
 
                 } catch (NumberFormatException e) {
-                    Toast.makeText(SetRevenueFigures.this, "Invalid input values", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SetRevenueFigures.this, "Invalid input value", Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -164,18 +166,6 @@ public class SetRevenueFigures extends AppCompatActivity {
 
 
 
-    public abstract class SimpleTextWatcher implements TextWatcher {
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-        }
-    }
-
-
-
     private String getSecondLastFinancialYear() {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
@@ -204,18 +194,17 @@ public class SetRevenueFigures extends AppCompatActivity {
         Calendar calendar = Calendar.getInstance();
         int year = calendar.get(Calendar.YEAR);
         int month = calendar.get(Calendar.MONTH);
-        // Log.d("Year","Current6 year" +year + ""+month);
+
 
         year = year - 1;
         int startYear, endYear;
         if (month >= Calendar.APRIL) {
             startYear = year;
             endYear = year + 1;
-            //  Log.d("startyear","start year is in if : "+startYear+" "+endYear);
-        } else {
+                 } else {
             startYear = year - 1;
             endYear = year;
-            // Log.d("startyear","start year is in else : "+startYear+" "+endYear);
+
 
         }
         return startYear + "_" + String.valueOf(endYear).substring(2);
