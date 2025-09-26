@@ -36,13 +36,13 @@ import java.util.Map;
 
 public class YOYSecondActivity extends AppCompatActivity {
     EditText et_date, edtAchieved, edtQty, edtNob;
-    MaterialButton btnSave,btnDailyTable;
+    MaterialButton btnSave, btnDailyTable;
 
     private RecyclerView recyclerRecentEntries;
-    TextView txtDailyTarget  , btnViewAll, txtNoData;
+    TextView txtDailyTarget, btnViewAll, txtNoData;
     private String key;
-    private int updatedValue;
-    private int updatedValueDaily;
+    private float updatedValue;        // was int
+    private float updatedValueDaily;   // was int
     private float monthlyAchieved = 0f;
     private float monthlyPercent = 0f;
     private float monthlyTarget = 0f;
@@ -55,8 +55,6 @@ public class YOYSecondActivity extends AppCompatActivity {
 
     List<String> publicHolidayList;
     HashMap<String, Float> monthTargetMap;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -81,35 +79,22 @@ public class YOYSecondActivity extends AppCompatActivity {
         txtNoData = findViewById(R.id.txtNoData);
 
         recyclerRecentEntries.setLayoutManager(new LinearLayoutManager(this));
-
         btnSave.setOnClickListener(v -> saveEntry());
-
         loadRecentEntries();
 
-
-
         Holiday = getIntent().getStringExtra("ShopHoliday");
-        if (!Holiday.isEmpty()) {
+        if (Holiday != null && !Holiday.isEmpty()) {
             Log.d("Holidqay", "Holiday is : " + Holiday);
         }
-
-//        int SecondTurnOverValue = getIntent().getIntExtra("TurnYear", 0);
-//        Log.d("TURNOVER", "turn over is : ; " + SecondTurnOverValue);
 
         int Result = getIntent().getIntExtra("ResultTurnYear", 0);
         Log.d("TURNOVER", "Result turn over is : ; " + Result);
 
-
-        String High_Per_Day = getIntent().getStringExtra("HighPerformance");
         highPerDay = getIntent().getStringExtra("HighPerformance");
-
         Growth_Per = getIntent().getIntExtra("Growth", 0);
 
-        Intent intent = getIntent();
         monthTargetMap = (HashMap<String, Float>) getIntent().getSerializableExtra("MonthTargetMap");
-        if (monthTargetMap == null) {
-            monthTargetMap = new HashMap<>();
-        }
+        if (monthTargetMap == null) monthTargetMap = new HashMap<>();
 
         for (Map.Entry<String, Float> entry : monthTargetMap.entrySet()) {
             String monthYear = entry.getKey();
@@ -122,11 +107,8 @@ public class YOYSecondActivity extends AppCompatActivity {
                 .build();
 
         et_date.setOnClickListener(v -> {
-            if (!datePicker.isAdded()) {
-                datePicker.show(getSupportFragmentManager(), "DATE_PICKER");
-            }
+            if (!datePicker.isAdded()) datePicker.show(getSupportFragmentManager(), "DATE_PICKER");
         });
-
 
         datePicker.addOnPositiveButtonClickListener(selection -> {
             et_date.setText(datePicker.getHeaderText());
@@ -144,7 +126,6 @@ public class YOYSecondActivity extends AppCompatActivity {
                 Date selectedDate = inputFormat.parse(datePicker.getHeaderText());
                 formattedDate = saveFormat.format(selectedDate);
                 selectedCalendar.setTime(selectedDate);
-
 
                 String selectedDayName = dayFormat.format(selectedDate);
                 List<String> publicHolidayList = loadHolidayDates();
@@ -168,9 +149,8 @@ public class YOYSecondActivity extends AppCompatActivity {
             refreshDailyTargetsForCurrentMonth(selectedCalendar);
 
             float expectedTarget = sharedPreferences.getFloat(expectedKey, -1f);
-
             if (expectedTarget >= 0f) {
-                txtDailyTarget.setText("Daily target : ₹" + String.format("%.2f", expectedTarget));
+                txtDailyTarget.setText("Daily target : ₹" + String.format(Locale.getDefault(), "%.2f", expectedTarget));
             } else {
                 txtDailyTarget.setText("Daily target : ₹0");
             }
@@ -182,13 +162,10 @@ public class YOYSecondActivity extends AppCompatActivity {
             String Quantitystr = edtQty.getText().toString().trim();
             String nobstr = edtNob.getText().toString().trim();
 
-            int achieved = 0, quantity = 0, nob = 0;
-
-            if (!Achievedstr.isEmpty()) achieved = Integer.parseInt(Achievedstr);
-            if (!Quantitystr.isEmpty()) quantity = Integer.parseInt(Quantitystr);
-            if (!nobstr.isEmpty()) nob = Integer.parseInt(nobstr);
-
-            // ✅ SAVE before navigating
+            float achieved = 0f, quantity = 0f, nob = 0f;
+            if (!Achievedstr.isEmpty()) achieved = Float.parseFloat(Achievedstr);
+            if (!Quantitystr.isEmpty()) quantity = Float.parseFloat(Quantitystr);
+            if (!nobstr.isEmpty()) nob = Float.parseFloat(nobstr);
 
             if (!date.isEmpty()) {
                 SaveDataToSharedPref(date, achieved, quantity, nob);
@@ -198,9 +175,9 @@ public class YOYSecondActivity extends AppCompatActivity {
             Intent i = new Intent(YOYSecondActivity.this, DailyTableYOY.class);
             i.putExtra("ShopHoliday", Holiday);
             i.putExtra("ResultTurnYear", Result);
-            i.putExtra("Achived_Value", updatedValueDaily);
-            i.putExtra("Quantity", quantity);
-            i.putExtra("NOB", nob);
+            i.putExtra("Achived_Value", updatedValueDaily); // now float
+            i.putExtra("Quantity", quantity);               // now float
+            i.putExtra("NOB", nob);                         // now float
             i.putExtra("HighPerDay", highPerDay);
             i.putExtra("Growth", Growth_Per);
             i.putExtra("MonthlyTarget", MonthTarget);
@@ -218,7 +195,6 @@ public class YOYSecondActivity extends AppCompatActivity {
                 intent.putExtra("MonthlyTarget", Result / 12f);
                 intent.putExtra("MonthlyAchieved", updatedValueDaily);
                 SharedPreferences todayPrefs = getSharedPreferences("TodayData", MODE_PRIVATE);
-                // float percent = todayPrefs.getFloat("today_percent", 0f);
                 float percent = getSafeFloat(todayPrefs, "today_percent", 0f);
 
                 intent.putExtra("MonthlyAchievedPercent", percent);
@@ -228,15 +204,11 @@ public class YOYSecondActivity extends AppCompatActivity {
                     intent.putExtra("data_value", updatedValue);
                 }
 
-
                 setResult(RESULT_OK);
-
-                // startActivity(intent);
                 finish();
             }
         });
     }
-
 
     public void ClearAllText() {
         et_date.setText("");
@@ -245,7 +217,8 @@ public class YOYSecondActivity extends AppCompatActivity {
         edtNob.setText("");
     }
 
-    public void SaveDataToSharedPref(String date, int Achieved, int Quantity, int nob) {
+    // ===== FLOAT VERSION =====
+    public void SaveDataToSharedPref(String date, float Achieved, float Quantity, float nob) {
         SharedPreferences sharedPreferences = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
@@ -255,30 +228,28 @@ public class YOYSecondActivity extends AppCompatActivity {
         int year = Integer.parseInt(yearStr);
 
         String shortMonth = convertToShortMonth(month);
-
         if (shortMonth.equals("Jan") || shortMonth.equals("Feb") || shortMonth.equals("Mar")) {
             year = Integer.parseInt(yearStr);
-            ;
         }
 
         String key = "data_" + shortMonth + "_" + year + "_Achieved";
 
-        int prev = sharedPreferences.getInt(key, 0);
-        int updatedValue = prev + Achieved;
+        float prev = getSafeFloat(sharedPreferences, key, 0f);
+        float updatedValue = prev + Achieved;
 
-        editor.putInt(key, updatedValue);
+        editor.putFloat(key, updatedValue);
         editor.putString("last_selected_date", date);
         editor.apply();
 
         this.key = key;
         this.updatedValue = updatedValue;
+        this.updatedValueDaily = Achieved; // keep last added daily value if you were using it
     }
 
-
-
-    private void SaveDailyDataToSharedPref(String dateInput, int achieved, int qty, int nob) {
+    // ===== FLOAT VERSION =====
+    private void SaveDailyDataToSharedPref(String dateInput, float achieved, float qty, float nob) {
         if (dateInput == null || dateInput.trim().isEmpty()) {
-            Log.e("SaveDailyData", "❌ Cannot save: date is empty");
+            Log.e("SaveDailyData", " Cannot save: date is empty");
             return;
         }
 
@@ -295,51 +266,38 @@ public class YOYSecondActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
 
-        // ✅ Get old values before saving
-        int prevAchieved = prefs.getInt("Achieved_" + normalizedDate, 0);
-        int prevQty = prefs.getInt("Quantity_" + normalizedDate, 0);
-        int prevNob = prefs.getInt("NOB_" + normalizedDate, 0);
+        // Get old values as float (handles old int data too)
+        float prevAchieved = getSafeFloat(prefs, "Achieved_" + normalizedDate, 0f);
+        float prevQty = getSafeFloat(prefs, "Quantity_" + normalizedDate, 0f);
+        float prevNob = getSafeFloat(prefs, "NOB_" + normalizedDate, 0f);
 
-        // ✅ Add new values to old ones
-        editor.putInt("Achieved_" + normalizedDate, prevAchieved + achieved);
-        editor.putInt("Quantity_" + normalizedDate, prevQty + qty);
-        editor.putInt("NOB_" + normalizedDate, prevNob + nob);
+        // Add and save as float
+        editor.putFloat("Achieved_" + normalizedDate, prevAchieved + achieved);
+        editor.putFloat("Quantity_" + normalizedDate, prevQty + qty);
+        editor.putFloat("NOB_" + normalizedDate, prevNob + nob);
+        editor.putBoolean("from_yoy_" + normalizedDate, true);
+        editor.putBoolean("expected_only_" + normalizedDate, false);
+
 
         editor.apply();
     }
 
-
     private String convertToShortMonth(String fullMonth) {
         switch (fullMonth) {
-            case "January":
-                return "Jan";
-            case "February":
-                return "Feb";
-            case "March":
-                return "Mar";
-            case "April":
-                return "Apr";
-            case "May":
-                return "May";
-            case "June":
-                return "Jun";
-            case "July":
-                return "Jul";
-            case "August":
-                return "Aug";
-            case "September":
-                return "Sep";
-            case "October":
-                return "Oct";
-            case "November":
-                return "Nov";
-            case "December":
-                return "Dec";
-            default:
-                return fullMonth;
+            case "January": return "Jan";
+            case "February": return "Feb";
+            case "March": return "Mar";
+            case "April": return "Apr";
+            case "May": return "May";
+            case "June": return "Jun";
+            case "July": return "Jul";
+            case "August": return "Aug";
+            case "September": return "Sep";
+            case "October": return "Oct";
+            case "November": return "Nov";
+            case "December": return "Dec";
+            default: return fullMonth;
         }
-
-
     }
 
     @Override
@@ -355,10 +313,9 @@ public class YOYSecondActivity extends AppCompatActivity {
 
                 Toast.makeText(this,
                         "Month Total: ₹" + monthlyAchieved +
-                                "\nAchieved: " + String.format("%.2f", monthlyPercent) + "%",
+                                "\nAchieved: " + String.format(Locale.getDefault(), "%.2f", monthlyPercent) + "%",
                         Toast.LENGTH_LONG
                 ).show();
-
             }
 
             data.putExtra("data_updated", true);
@@ -378,14 +335,12 @@ public class YOYSecondActivity extends AppCompatActivity {
         Calendar cal = Calendar.getInstance();
         cal.set(year, month, 1);
 
-
         String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
         String currentMonthName = monthNames[month];
 
         String monthYearKey = currentMonthName + "_" + year;
         float monthlyTarget = monthTargetMap.getOrDefault(monthYearKey, MonthTarget);
-
 
         Log.d("CorrectMonthTarget", "Using target for " + monthYearKey + " = ₹" + monthlyTarget);
 
@@ -442,7 +397,6 @@ public class YOYSecondActivity extends AppCompatActivity {
         Log.d("YOYSecond", "High Perf days: " + highPerfDays);
 
         float growthMultiplier = 1 + (HighPerGrowthPer / 100f);
-
         float baseDailyTarget = monthlyTarget / (workingDays + highPerfDays * (growthMultiplier - 1));
 
         List<Float> rawTargets = new ArrayList<>();
@@ -455,11 +409,9 @@ public class YOYSecondActivity extends AppCompatActivity {
             String dateStr = dateFormat.format(cal.getTime());
             String dayStr = dayFormat.format(cal.getTime());
 
-
             float target;
             if (Holiday.equals(dayStr) || publicHolidayDates.contains(dateStr)) {
                 target = 0f;
-
             } else if (highPerfDates.contains(dayStr) || prePublicHighPerfDates.contains(dateStr)) {
                 target = baseDailyTarget * growthMultiplier;
             } else {
@@ -468,13 +420,10 @@ public class YOYSecondActivity extends AppCompatActivity {
 
             rawTargets.add(target);
             dateList.add(dateStr);
-
         }
 
         float totalSum = 0f;
-        for (float val : rawTargets) {
-            totalSum += val;
-        }
+        for (float val : rawTargets) totalSum += val;
 
         float scalingFactor = (totalSum != 0) ? (monthlyTarget / totalSum) : 1f;
 
@@ -487,9 +436,7 @@ public class YOYSecondActivity extends AppCompatActivity {
         }
 
         float finalSum = 0f;
-        for (float val : rawTargets) {
-            finalSum += val;
-        }
+        for (float val : rawTargets) finalSum += val;
 
         float diff = monthlyTarget - finalSum;
 
@@ -506,17 +453,16 @@ public class YOYSecondActivity extends AppCompatActivity {
             Log.d("DailyTargetGen", "Date: " + dateKey + " Target: " + rawTargets.get(i));
         }
         editor.apply();
+
         SharedPreferences yoyPrefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
         SharedPreferences.Editor yoyEditor = yoyPrefs.edit();
         String monthKey = "last_month_target_" + startDate.get(Calendar.MONTH) + "_" + startDate.get(Calendar.YEAR);
         yoyEditor.putFloat(monthKey, monthlyTarget);
         yoyEditor.apply();
 
-
         Toast.makeText(this, "Daily Targets Generated!", Toast.LENGTH_SHORT).show();
-
-
     }
+
     private void refreshDailyTargetsForCurrentMonth(Calendar cal) {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
         SharedPreferences yoyPrefs = getSharedPreferences("YOY_PREFS", MODE_PRIVATE);
@@ -543,9 +489,7 @@ public class YOYSecondActivity extends AppCompatActivity {
             }
         }
 
-
         String monthKey = "last_month_target_" + month + "_" + year;
-        // float lastSavedTarget = yoyPrefs.getFloat(monthKey, -1f);
         float lastSavedTarget = getSafeFloat(yoyPrefs, monthKey, -1f);
 
         String[] monthNames = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
@@ -562,8 +506,6 @@ public class YOYSecondActivity extends AppCompatActivity {
             Log.d("RefreshDaily", "Manual edits found and no target change, skipping refresh.");
         }
     }
-
-
 
     private List<String> loadHolidayDates() {
         List<String> holidays = new ArrayList<>();
@@ -598,6 +540,7 @@ public class YOYSecondActivity extends AppCompatActivity {
 
         return holidays;
     }
+
     private void clearExpectedDataForMonth(Calendar cal) {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
@@ -614,9 +557,8 @@ public class YOYSecondActivity extends AppCompatActivity {
         for (int i = 1; i <= daysInMonth; i++) {
             tempCal.set(Calendar.DAY_OF_MONTH, i);
             String dateStr = dateFormat.format(tempCal.getTime());
-
             editor.remove("Expected_" + dateStr);
-            // Optional: also clear Achieved, Quantity, NOB if you want to fully reset
+            // If you also want to reset daily entries, uncomment:
             // editor.remove("Achieved_" + dateStr);
             // editor.remove("Quantity_" + dateStr);
             // editor.remove("NOB_" + dateStr);
@@ -626,7 +568,6 @@ public class YOYSecondActivity extends AppCompatActivity {
         Log.d("ClearData", "Cleared expected data for month: " + (month + 1) + "/" + year);
     }
 
-
     private float getSafeFloat(SharedPreferences prefs, String key, float defaultValue) {
         try {
             return prefs.getFloat(key, defaultValue);
@@ -634,6 +575,8 @@ public class YOYSecondActivity extends AppCompatActivity {
             Object value = prefs.getAll().get(key);
             if (value instanceof Integer) {
                 return ((Integer) value).floatValue();
+            } else if (value instanceof Long) {
+                return ((Long) value).floatValue();
             } else if (value instanceof String) {
                 try {
                     return Float.parseFloat((String) value);
@@ -657,11 +600,11 @@ public class YOYSecondActivity extends AppCompatActivity {
             return;
         }
 
-        int achieved = Integer.parseInt(achievedStr);
-        int qty = Integer.parseInt(qtyStr);
-        int nob = Integer.parseInt(nobStr);
+        float achieved = Float.parseFloat(achievedStr);
+        float qty = Float.parseFloat(qtyStr);
+        float nob = Float.parseFloat(nobStr);
 
-        // Save to SharedPreferences (monthly + daily)
+        // Save to SharedPreferences (monthly + daily) as floats
         SaveDataToSharedPref(dateInput, achieved, qty, nob);
         SaveDailyDataToSharedPref(dateInput, achieved, qty, nob);
 
@@ -674,6 +617,7 @@ public class YOYSecondActivity extends AppCompatActivity {
         Toast.makeText(this, "Entry Saved", Toast.LENGTH_SHORT).show();
         ClearAllText();
     }
+
     private void loadRecentEntries() {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
         Map<String, ?> allData = prefs.getAll();
@@ -685,13 +629,25 @@ public class YOYSecondActivity extends AppCompatActivity {
         for (String key : allData.keySet()) {
             if (key.startsWith("Achieved_")) {
                 String date = key.replace("Achieved_", "");
-                int achieved = prefs.getInt(key, 0);
-                int qty = prefs.getInt("Quantity_" + date, 0);
-                int nob = prefs.getInt("NOB_" + date, 0);
+
+                float achieved = getSafeFloat(prefs, "Achieved_" + date, 0f);
+                float qty      = getSafeFloat(prefs, "Quantity_" + date, 0f);
+                float nob      = getSafeFloat(prefs, "NOB_" + date, 0f);
+
+                // flags
+                boolean expectedOnly = prefs.getBoolean("expected_only_" + date, false);
+                boolean fromYOY      = prefs.getBoolean("from_yoy_" + date, false);
+
+                // skip: edited only Expected (no sales) OR never saved via YOY (no sales)
+                if ((expectedOnly && achieved == 0f && qty == 0f && nob == 0f)
+                        || (!fromYOY && achieved == 0f && qty == 0f && nob == 0f)) {
+                    continue;
+                }
 
                 allEntries.add(new DailyEntry(date, achieved, qty, nob));
             }
         }
+
 
         // ✅ Sort entries by date (latest first)
         allEntries.sort((e1, e2) -> {
@@ -710,8 +666,6 @@ public class YOYSecondActivity extends AppCompatActivity {
             recentEntries.add(allEntries.get(i));
         }
 
-
-
         if (recentEntries.isEmpty()) {
             recyclerRecentEntries.setVisibility(View.GONE);
             txtNoData.setVisibility(View.VISIBLE);
@@ -720,6 +674,7 @@ public class YOYSecondActivity extends AppCompatActivity {
             txtNoData.setVisibility(View.GONE);
 
             DailyEntryAdapter adapter = new DailyEntryAdapter(recentEntries);
+            recyclerRecentEntries.setAdapter(adapter);
             recyclerRecentEntries.setAdapter(adapter);
         }
 
@@ -733,9 +688,9 @@ public class YOYSecondActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadRecentEntries(); // refresh recycler list
-        // optionally also refresh monthly total if you display it
         recalcMonthlyTotals();
     }
+
     private void recalcMonthlyTotals() {
         SharedPreferences prefs = getSharedPreferences("Shop Data", MODE_PRIVATE);
         Map<String, ?> allData = prefs.getAll();
@@ -755,7 +710,7 @@ public class YOYSecondActivity extends AppCompatActivity {
                     Calendar cal = Calendar.getInstance();
                     cal.setTime(d);
                     if (cal.get(Calendar.MONTH) == currentMonth && cal.get(Calendar.YEAR) == currentYear) {
-                        monthTotal += prefs.getInt(key, 0);
+                        monthTotal += getSafeFloat(prefs, key, 0f);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -765,11 +720,7 @@ public class YOYSecondActivity extends AppCompatActivity {
 
         monthlyAchieved = monthTotal;
         Log.d("YOYSecondActivity", "Monthly Achieved recalculated: ₹" + monthlyAchieved);
-
-        // If you show monthly total in UI, update here:
-        // txtMonthlyAchieved.setText("Monthly Achieved: ₹" + (int)monthTotal);
+        // If you show monthly total in UI, update here
+        // txtMonthlyAchieved.setText("Monthly Achieved: ₹" + String.format(Locale.getDefault(),"%.2f", monthTotal));
     }
-
-
-
 }

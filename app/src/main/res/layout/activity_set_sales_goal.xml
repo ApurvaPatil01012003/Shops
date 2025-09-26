@@ -8,47 +8,58 @@
     android:orientation="vertical"
     tools:context=".SetSalesGoal">
 
+    <!-- Hero image takes ~40% height, stays responsive -->
     <ImageView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="65"
         android:src="@drawable/salesgoal"
-        android:adjustViewBounds="true"
-        android:scaleType="centerCrop"/>
+        android:scaleType="centerCrop"
+        android:contentDescription="@string/app_name" />
+
+    <!-- Gradient section takes ~60% height -->
     <LinearLayout
         android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="60"
         android:orientation="vertical"
         android:background="@drawable/blue_gradient"
-        android:layout_height="match_parent">
-<TextView
-    android:id="@+id/txtFirst"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="SET YOUR \n SALES GOAL"
-    android:textSize="40sp"
-    android:textAlignment="center"
-    android:textStyle="bold"
-    android:textColor="#FFFFFF"/>
+        android:paddingStart="@dimen/_20sdp"
+        android:paddingEnd="@dimen/_20sdp"
+        android:paddingTop="@dimen/_20sdp"
+        android:paddingBottom="@dimen/_20sdp">
 
-    <TextView
+        <TextView
+            android:id="@+id/txtFirst"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="SET YOUR \n SALES GOAL"
+            android:textAlignment="center"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:lineSpacingExtra="@dimen/_2sdp"
+            android:textSize="@dimen/_40ssp"
+            tools:text="SET YOUR \n SALES GOAL" />
 
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textAlignment="center"
-        android:text="Define your yearly target and track progress every month"
-        android:textSize="20sp"
-        android:padding="20dp"
-        android:textColor="#FFFFFF"
-        />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:text="Define your yearly target and track progress every month"
+            android:textColor="#FFFFFF"
+            android:paddingTop="@dimen/_12sdp"
+            android:paddingBottom="@dimen/_16sdp"
+            android:textSize="@dimen/_16ssp" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:padding="10dp"
-            android:layout_margin="10dp"
+            android:layout_margin="@dimen/_10sdp"
             android:clickable="true"
             app:srcCompat="@drawable/baseline_arrow_forward_24" />
+
     </LinearLayout>
 
 </LinearLayout>

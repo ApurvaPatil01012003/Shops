@@ -1,0 +1,14 @@
+<resources>
+    <!-- Spacing -->
+    <dimen name="space_s">8dp</dimen>
+    <dimen name="space_m">12dp</dimen>
+    <dimen name="space_l">16dp</dimen>
+
+    <!-- Screen padding -->
+    <dimen name="padding_screen_h">20dp</dimen>
+    <dimen name="padding_screen_v">20dp</dimen>
+
+    <!-- Autosize bounds for headline -->
+    <dimen name="auto_min_headline">22sp</dimen>
+    <dimen name="auto_max_headline">40sp</dimen>
+</resources>

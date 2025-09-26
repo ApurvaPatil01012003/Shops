@@ -46,13 +46,24 @@ public class Mpin extends AppCompatActivity {
         reEdtPin4 = findViewById(R.id.reEdtPin4);
         btnNextPin = findViewById(R.id.btnNextPin);
 
-        setupAutoMove(edtPin1, edtPin2);
-        setupAutoMove(edtPin2, edtPin3);
-        setupAutoMove(edtPin3, edtPin4);
+//        setupAutoMove(edtPin1, edtPin2);
+//        setupAutoMove(edtPin2, edtPin3);
+//        setupAutoMove(edtPin3, edtPin4);
+//
+//        setupAutoMove(reEdtPin1, reEdtPin2);
+//        setupAutoMove(reEdtPin2, reEdtPin3);
+//        setupAutoMove(reEdtPin3, reEdtPin4);
 
-        setupAutoMove(reEdtPin1, reEdtPin2);
-        setupAutoMove(reEdtPin2, reEdtPin3);
-        setupAutoMove(reEdtPin3, reEdtPin4);
+        setupPinField(null,      edtPin1,  edtPin2);
+        setupPinField(edtPin1,   edtPin2,  edtPin3);
+        setupPinField(edtPin2,   edtPin3,  edtPin4);
+        setupPinField(edtPin3,   edtPin4,  null);
+
+        setupPinField(null,        reEdtPin1,  reEdtPin2);
+        setupPinField(reEdtPin1,   reEdtPin2,  reEdtPin3);
+        setupPinField(reEdtPin2,   reEdtPin3,  reEdtPin4);
+        setupPinField(reEdtPin3,   reEdtPin4,  null);
+
 
         String Name = getIntent().getStringExtra("shop_name");
 
@@ -111,24 +122,87 @@ public class Mpin extends AppCompatActivity {
 
     }
 
-    private void setupAutoMove(EditText current, EditText next) {
-        current.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+//    private void setupAutoMove(EditText current, EditText next) {
+//        current.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//                if (s.length() == 1) {
+//                    next.requestFocus(); // Move to next box when 1 digit is entered
+//                }
+//            }
+//        });
+//    }
 
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
+    private void setupPinField(EditText prev, EditText cur, EditText next) {
+        // numeric, 1 char
+        cur.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        cur.setFilters(new android.text.InputFilter[]{ new android.text.InputFilter.LengthFilter(1) });
 
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (s.length() == 1) {
-                    next.requestFocus(); // Move to next box when 1 digit is entered
+        // Move forward when a digit appears; handle paste
+        cur.addTextChangedListener(new TextWatcher() {
+            private boolean selfUpdate = false;
+
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override public void afterTextChanged(Editable s) {
+                if (selfUpdate) return;
+
+                String text = s.toString();
+
+                // If user pasted multiple digits, fan out to current→next→next...
+                if (text.length() > 1) {
+                    selfUpdate = true;
+                    char[] arr = text.replaceAll("\\D", "").toCharArray();
+                    int i = 0;
+
+                    if (arr.length > 0) cur.setText(String.valueOf(arr[i++]));
+                    if (next != null && arr.length > 1) next.setText(String.valueOf(arr[i++]));
+                    // if you have only 4 boxes, you can chain further:
+                    // you'll call setupPinField on all with proper prev/next so this is usually enough.
+
+                    // move focus to the first empty among cur/next
+                    if (next != null && next.getText().length() == 0) next.requestFocus();
+                    else cur.requestFocus();
+
+                    selfUpdate = false;
+                    return;
+                }
+
+                // Normal single char input: jump to next
+                if (text.length() == 1 && next != null) {
+                    next.requestFocus();
+                    next.setSelection(next.getText().length());
                 }
             }
         });
+
+        // Move back on backspace when empty
+        cur.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == android.view.KeyEvent.KEYCODE_DEL
+                    && event.getAction() == android.view.KeyEvent.ACTION_DOWN) {
+                if (cur.getText().length() == 0 && prev != null) {
+                    prev.requestFocus();
+                    prev.setSelection(prev.getText().length());
+                    return true; // handled
+                }
+            }
+            return false;
+        });
+
+        // Optional: clicking focuses and selects
+        cur.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) cur.setSelection(cur.getText().length());
+        });
     }
+
     private void addWatcher(EditText editText) {
         editText.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}

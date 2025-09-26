@@ -7,23 +7,18 @@ import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.material.button.MaterialButton;
-
-import java.util.ArrayList;
 import java.util.Calendar;
 
 public class SecondActivity extends AppCompatActivity {
@@ -176,18 +171,6 @@ public class SecondActivity extends AppCompatActivity {
         editor.putInt("editGrowth", EditGrowth);
         editor.putInt("result", Result);
         editor.apply();
-
-
-//        Log.d("selected_days","selected_days is : "+name);
-//
-//        Log.d("selected_days","selected_days is : "+fturnover);
-//
-//        Log.d("selected_days","selected_days is : "+sturnover);
-//
-//        Log.d("selected_days","selected_days is : "+growth_per);
-//        Log.d("selected_days","selected_days is : "+EditGrowth);
-//        Log.d("selected_days","selected_days is : "+shopHolidays);
-//        Log.d("selected_days","selected_days is : "+HighPerformDays);
 
 
     }

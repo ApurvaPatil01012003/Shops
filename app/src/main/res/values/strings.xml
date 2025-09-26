@@ -6,4 +6,11 @@
     <string name="close_drawer">close_drawer</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+        <string name="cd_sales_hero">Sales goal header image</string>
+        <string name="set_your_sales_goal">SET YOUR\nSALES GOAL</string>
+        <string name="define_yearly_target">Define your yearly target and track progress every month</string>
+        <string name="continue_label">Continue</string>
+
+
 </resources>

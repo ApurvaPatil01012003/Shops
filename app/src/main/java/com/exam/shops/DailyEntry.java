@@ -3,11 +3,11 @@ package com.exam.shops;
 
 public class DailyEntry {
     private String date;
-    private int achieved;
-    private int quantity;
-    private int nob;
+    private float achieved;
+    private float quantity;
+    private float nob;
 
-    public DailyEntry(String date, int achieved, int quantity, int nob) {
+    public DailyEntry(String date, float achieved, float quantity, float nob) {
         this.date = date;
         this.achieved = achieved;
         this.quantity = quantity;
@@ -18,15 +18,15 @@ public class DailyEntry {
         return date;
     }
 
-    public int getAchieved() {
+    public float getAchieved() {
         return achieved;
     }
 
-    public int getQuantity() {
+    public float getQuantity() {
         return quantity;
     }
 
-    public int getNob() {
+    public float getNob() {
         return nob;
     }
 }
